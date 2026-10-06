@@ -9,8 +9,8 @@ class Connection
         if (is_null(self::$pdo)) {
   
             $dbname = 'postgres'; 
-            $dbuser = '';
-            $dbpass = '';
+            $dbuser = 'sail';
+            $dbpass = 'secret';
             $host = 'localhost';
             self::$pdo = new PDO("pgsql:dbname=$dbname;host=$host", $dbuser, $dbpass);
 
