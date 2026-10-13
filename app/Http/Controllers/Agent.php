@@ -53,4 +53,36 @@ class Agent
       }
        // Implementation for Get or Insert logic
     }
+    public function Login()
+    {
+        if ($this->email == null || $this->password == null) return null;
+        try {
+            $sql = "SELECT id_user, name, email, password, cpf FROM users WHERE email = :email AND password = :password AND role = :role";
+            $stmt = $this->connection->conect()->prepare($sql);
+            $stmt->bindParam(':email', $this->email, PDO::PARAM_STR);
+            $stmt->bindParam(':password', $this->password, PDO::PARAM_STR);
+            $stmt->bindValue(':role', 1, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error in Login: " . $e->getMessage());
+        }
+    }
+    public function UpdateAgent()
+    {
+        if ($this->id_user == null) return null;
+        try {
+            $sql = "UPDATE users SET name = UPPER(TRIM(:name)), email = TRIM(:email), password = TRIM(:password), cpf = TRIM(:cpf) WHERE id_user = :id_user AND role = :role";
+            $stmt = $this->connection->conect()->prepare($sql);
+            $stmt->bindParam(':name', $this->name, PDO::PARAM_STR);
+            $stmt->bindParam(':email', $this->email, PDO::PARAM_STR);
+            $stmt->bindParam(':password', $this->password, PDO::PARAM_STR);
+            $stmt->bindParam(':cpf', $this->cpf, PDO::PARAM_STR);
+            $stmt->bindParam(':id_user', $this->id_user, PDO::PARAM_INT);
+            $stmt->bindValue(':role', 1, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            throw new Exception("Error in UpdateAgent: " . $e->getMessage());
+        }
+    }
 }
