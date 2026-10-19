@@ -14,17 +14,111 @@ new #[Layout('layouts.guest')] class extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $cpf = '';
+
+    /**
+     * Validates the CPF mathematically.
+     */
+    private function isValidCpf(string $cpf): bool
+    {
+        $cpf = preg_replace('/\D/', '', $cpf);
+
+        if (strlen($cpf) !== 11) {
+            return false;
+        }
+
+        // Reject CPFs containing the same digit repeated
+        if (preg_match('/^(\d)\1{10}$/', $cpf)) {
+            return false;
+        }
+
+        // Reject ascending and descending digit sequences
+        $base = substr($cpf, 0, 9);
+
+        if (in_array($base, ['123456789', '987654321'], true)) {
+            return false;
+        }
+
+        // Calculate the first check digit
+        $sum = 0;
+
+        for ($i = 0; $i < 9; $i++) {
+            $sum += (int) $cpf[$i] * (10 - $i);
+        }
+
+        $remainder = ($sum * 10) % 11;
+        $digit1 = $remainder === 10 ? 0 : $remainder;
+
+        if ((int) $cpf[9] !== $digit1) {
+            return false;
+        }
+
+        // Calculate the second check digit
+        $sum = 0;
+
+        for ($i = 0; $i < 10; $i++) {
+            $sum += (int) $cpf[$i] * (11 - $i);
+        }
+
+        $remainder = ($sum * 10) % 11;
+        $digit2 = $remainder === 10 ? 0 : $remainder;
+
+        return (int) $cpf[10] === $digit2;
+    }
 
     /**
      * Handle an incoming registration request.
      */
     public function register(): void
     {
+        $cleanCpf = preg_replace('/\D/', '', $this->cpf);
+
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:users,email',
+            ],
+
+            'cpf' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($cleanCpf) {
+                    if (strlen($cleanCpf) !== 11) {
+                        $fail('The CPF must contain exactly 11 digits.');
+                        return;
+                    }
+
+                    if (!$this->isValidCpf($cleanCpf)) {
+                        $fail('The provided CPF is invalid.');
+                        return;
+                    }
+
+                    if (User::where('cpf', $cleanCpf)->exists()) {
+                        $fail('This CPF is already registered.');
+                    }
+                },
+            ],
+
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                Rules\Password::defaults(),
+            ],
         ]);
+
+        // Store the CPF using digits only
+        $validated['cpf'] = $cleanCpf;
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -32,7 +126,10 @@ new #[Layout('layouts.guest')] class extends Component
 
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(
+            route('dashboard', absolute: false),
+            navigate: true
+        );
     }
 }; ?>
 
@@ -57,6 +154,14 @@ new #[Layout('layouts.guest')] class extends Component
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
+
+        <!-- CPF -->
+        <div class="mt-4">
+            <x-input-label for="cpf" :value="__('CPF')" />
+            <x-text-input wire:model="cpf" x-data="cpfMask" id="cpf" class="block mt-1 w-full" type="text" name="cpf" required maxlength="14" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" />
+            <x-input-error :messages="$errors->get('cpf')" class="mt-2" />
+        </div>
+
 
         <!-- Password -->
         <div class="mt-4">
