@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+          // Só o admin cadastra, edita e remove agentes
+        Gate::define('manage-agents', fn (User $user) => $user->isAdmin()); 
     }
 }
