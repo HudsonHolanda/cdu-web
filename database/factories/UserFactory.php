@@ -35,6 +35,16 @@ class UserFactory extends Factory
             'role' => UserRole::CITIZEN,
         ];
     }
+        public function agent(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::AGENT]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::ADMIN]);
+    }
+
 
     /**
      * Indicate that the model's email address should be unverified.
