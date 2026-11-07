@@ -1,3 +1,3 @@
 <img
     src="{{ Vite::asset('resources/images/logo.svg') }}"
-    alt="Logo" class="logo-img" />
+    alt="C.D.U" {{ $attributes->merge(['class' => 'h-9 w-auto']) }} />
