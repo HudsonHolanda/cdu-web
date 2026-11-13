@@ -34,6 +34,10 @@ new class extends Component
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.*')" wire:navigate>
+                        Denúncias
+                    </x-nav-link>
+
                     @can('manage-agents')
                         <x-nav-link :href="route('agents.index')" :active="request()->routeIs('agents.*')" wire:navigate>
                             {{ __('Agents') }}
@@ -89,6 +93,10 @@ new class extends Component
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.*')" wire:navigate>
+                Denúncias
             </x-responsive-nav-link>
 
             @can('manage-agents')
