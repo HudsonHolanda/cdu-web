@@ -1,0 +1,159 @@
+[
+    {
+        "complaintId": "DEN-2026-001",
+        "publicId": "b447cf1b-48b2-4f39-93e3-137700f9ef21",
+        "title": "Buraco na via atrapalhando tráfego de automóveis",
+        "description": "Foi identificado um buraco de grande dimensão no asfalto, dificultando a passagem de veículos e podendo causar acidentes. É necessária a avaliação e manutenção do local para garantir a segurança dos moradores e motoristas.",
+        "userId": 1,
+        "imageUrl": "buraco_pedroteixeira.jpg",
+        "attachments": [
+            "buraco_pedroteixeira.jpg",
+            "buraco-itaquera.jpg"
+        ],
+        "status": "Em aberto",
+        "highPriority": false,
+        "createdAt": "2026-08-01T12:30:00-03:00",
+        "location": {
+            "latitude": -23.5225,
+            "longitude": -46.8356,
+            "address": "Rua das Acácias, 120",
+            "district": "Centro",
+            "cep": "06310-000",
+            "complement": "Próximo à praça"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-002",
+        "publicId": "3ab1fc5c-f047-4894-a038-47738e8b8150",
+        "title": "Poste sem iluminação à noite",
+        "description": "O poste está apagado há vários dias e a rua fica sem iluminação durante a noite.",
+        "userId": 1,
+        "imageUrl": "images.jpg",
+        "attachments": [
+            "images.jpg"
+        ],
+        "status": "Em análise",
+        "highPriority": true,
+        "createdAt": "2026-08-03T19:10:00-03:00",
+        "location": {
+            "latitude": -23.5301,
+            "longitude": -46.8422,
+            "address": "Avenida Brasil, 450",
+            "district": "Vila Nova",
+            "cep": "06320-100",
+            "complement": "Em frente ao ponto de ônibus"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-003",
+        "publicId": "d6d26cb4-8296-4fb3-8b0e-4bd90a61763c",
+        "title": "Acúmulo de lixo na calçada",
+        "description": "Há sacos de lixo e resíduos acumulados na calçada, causando mau cheiro e atraindo animais.",
+        "userId": 1,
+        "imageUrl": "lixo-cidade.webp",
+        "attachments": [
+            "lixo-cidade.webp",
+            "lixo-cidade.jpeg"
+        ],
+        "status": "Concluída",
+        "highPriority": false,
+        "createdAt": "2026-08-05T08:45:00-03:00",
+        "location": {
+            "latitude": -23.5167,
+            "longitude": -46.851,
+            "address": "Rua do Mercado, 82",
+            "district": "Jardim das Flores",
+            "cep": "06330-220",
+            "complement": "Ao lado do mercado"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-004",
+        "publicId": "2c6dc362-e035-4c6e-8cd6-013cc0272448",
+        "title": "Mosquitos em área com água parada",
+        "description": "Foi observada água parada em um terreno próximo às residências, com grande quantidade de mosquitos.",
+        "userId": 1,
+        "imageUrl": "images (1).jpg",
+        "attachments": [
+            "images (1).jpg"
+        ],
+        "status": "Em aberto",
+        "highPriority": true,
+        "createdAt": "2026-08-07T14:20:00-03:00",
+        "location": {
+            "latitude": -23.5085,
+            "longitude": -46.8339,
+            "address": "Rua Ipê Amarelo, 35",
+            "district": "Parque Central",
+            "cep": "06340-080",
+            "complement": "Terreno ao lado do número 35"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-005",
+        "publicId": "0bd42317-8891-4726-94e4-5948b16013cb",
+        "title": "Falta de fiscalização de trânsito",
+        "description": "Veículos irregulares circulam em alta velocidade e colocam pedestres em risco na região.",
+        "userId": 1,
+        "imageUrl": "imagem3-blog-buracos-o-maior-perigo-das-ruas-asfalto-facil.jpg",
+        "attachments": [
+            "imagem3-blog-buracos-o-maior-perigo-das-ruas-asfalto-facil.jpg"
+        ],
+        "status": "Em análise",
+        "highPriority": false,
+        "createdAt": "2026-08-09T11:05:00-03:00",
+        "location": {
+            "latitude": -23.5392,
+            "longitude": -46.829,
+            "address": "Avenida dos Autonomistas, 900",
+            "district": "Quitaúna",
+            "cep": "06186-000",
+            "complement": "Próximo ao posto de combustível"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-006",
+        "publicId": "df63f64c-85f5-42a2-9b89-c545f6c891bf",
+        "title": "Pombos em área de recreação",
+        "description": "A concentração de pombos no espaço de convivência está causando sujeira e preocupação aos frequentadores.",
+        "userId": 1,
+        "imageUrl": "cadastro_denuncias.png",
+        "attachments": [
+            "cadastro_denuncias.png"
+        ],
+        "status": "Em aberto",
+        "highPriority": false,
+        "createdAt": "2026-08-10T16:40:00-03:00",
+        "location": {
+            "latitude": -23.5142,
+            "longitude": -46.8461,
+            "address": "Praça da Cidadania, s/n",
+            "district": "Centro",
+            "cep": "06300-000",
+            "complement": "Área dos bancos"
+        }
+    },
+    {
+        "complaintId": "DEN-2026-P4BGXU28",
+        "publicId": "416a5300-76b5-4aa3-b38d-dfe3e816cdf5",
+        "category": "Buraco na via",
+        "title": "teste323dasdwa",
+        "description": "simgeadsafwadsadwagradwagadwwadswadfwae",
+        "userId": 6,
+        "imageUrl": "eb192aa8-ccdd-4406-a780-10a987709f75.jpg",
+        "attachments": [
+            "eb192aa8-ccdd-4406-a780-10a987709f75.jpg"
+        ],
+        "status": "Em aberto",
+        "highPriority": false,
+        "createdAt": "2026-11-11T16:32:06-03:00",
+        "location": {
+            "latitude": -23.568362,
+            "longitude": -46.822107,
+            "address": "123",
+            "district": "32",
+            "cep": "06340290",
+            "complement": "2"
+        }
+    }
+]
