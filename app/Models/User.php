@@ -42,8 +42,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function hasRole(UserRole $min): bool
+    {
+        return $this->role->value >= $min->value;
+    }
 
-    
     public function isAdmin(): bool
     {
         return $this->role === UserRole::ADMIN;
