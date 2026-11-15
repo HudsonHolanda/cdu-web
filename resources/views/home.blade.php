@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>C.D.U — Sua Cidade, Seu Cuidado</title>
+  <script>document.documentElement.classList.toggle('dark', localStorage.getItem('cdu-theme') === 'dark');</script>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
   <style>
@@ -23,6 +24,23 @@
       --cdu-green-dark: #236342;
       --cdu-green-soft: #eaf5ee;
       --cdu-shadow: 0 18px 45px rgba(35, 99, 66, .08);
+    }
+
+    html.dark {
+      color-scheme: dark;
+      --cdu-bg: #0d1511;
+      --cdu-surface: #17221a;
+      --cdu-surface-soft: #1d2b21;
+      --cdu-text: #edf5ef;
+      --cdu-muted: #a6b5aa;
+      --cdu-border: #304337;
+      --cdu-green: #82b88b;
+      --cdu-green-dark: #a9d0ae;
+      --cdu-green-soft: #223b29;
+      --cdu-orange: #f49a4d;
+      --cdu-orange-dark: #dc7a30;
+      --cdu-orange-soft: #3b2b1d;
+      --cdu-shadow: 0 18px 45px rgba(0, 0, 0, .24);
     }
 
     body.cdu-home {
@@ -47,7 +65,7 @@
       z-index: 2;
       padding: 22px 0;
       border-bottom: 1px solid var(--cdu-border);
-      background: rgba(255, 255, 255, .94);
+      background: color-mix(in srgb, var(--cdu-surface) 94%, transparent);
     }
 
     body.cdu-home nav {
@@ -66,6 +84,9 @@
       /* Mantém as cores originais da marca presentes no arquivo da logo. */
       filter: none;
     }
+    body.cdu-home .logo-img-dark { display: none; }
+    html.dark body.cdu-home .logo-img-light { display: none; }
+    html.dark body.cdu-home .logo-img-dark { display: block; }
 
     body.cdu-home .nav-links {
       display: flex;
@@ -76,7 +97,7 @@
     }
 
     body.cdu-home .nav-links a {
-      color: #536158 !important;
+      color: var(--cdu-muted) !important;
       font-size: 14px;
       font-weight: 550;
       transition: color .2s ease;
@@ -105,7 +126,7 @@
     }
     body.cdu-home .btn-login {
       color: var(--cdu-green) !important;
-      background: #fff !important;
+      background: var(--cdu-surface) !important;
     }
     body.cdu-home .btn-cadastrar {
       color: #fff !important;
@@ -274,11 +295,19 @@
     @media (max-width: 560px) {
       body.cdu-home .container { width: min(100% - 32px, 1120px); }
       body.cdu-home header { padding: 16px 0; }
-      body.cdu-home nav { flex-wrap: wrap; gap: 16px; }
+      body.cdu-home nav { position: relative; flex-wrap: nowrap; gap: 10px; }
       body.cdu-home .logo-img { width: 112px; }
-      body.cdu-home .nav-links { order: 3; width: 100%; justify-content: space-between; gap: 10px; margin: 0; }
-      body.cdu-home .nav-links a { font-size: 12px; }
+      body.cdu-home .nav-links { display: none !important; position: absolute !important; top: calc(100% + 10px) !important; left: 0 !important; right: 0 !important; z-index: 5 !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; gap: 3px !important; width: auto !important; margin: 0 !important; padding: 8px !important; border: 1px solid var(--cdu-border) !important; border-radius: 14px !important; background: var(--cdu-surface) !important; box-shadow: var(--cdu-shadow) !important; }
+      body.cdu-home .nav-links.is-open { display: flex !important; }
+      body.cdu-home .nav-links a { display: flex !important; align-items: center !important; justify-content: flex-start !important; min-height: 44px !important; padding: 0 14px !important; border-radius: 8px !important; color: var(--cdu-text) !important; font-size: 14px !important; }
+      body.cdu-home .nav-links a:hover { background: var(--cdu-green-soft) !important; color: var(--cdu-text) !important; }
       body.cdu-home .nav-actions { margin-left: auto; gap: 7px; }
+      body.cdu-home .nav-actions .cdu-theme-toggle { display: none; }
+      body.cdu-home .nav-toggle { display: inline-flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 5px !important; width: 42px !important; height: 42px !important; flex: 0 0 42px !important; border: 1px solid var(--cdu-border) !important; border-radius: 10px !important; background: var(--cdu-surface) !important; cursor: pointer !important; }
+      body.cdu-home .nav-toggle span { display: block !important; width: 21px !important; height: 2px !important; border-radius: 2px !important; background: var(--cdu-text) !important; transition: transform .2s ease, opacity .2s ease; }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
       body.cdu-home .btn-login, body.cdu-home .btn-cadastrar { min-height: 38px; padding: 0 12px; font-size: 12px; }
       body.cdu-home .hero h1 { font-size: 43px; letter-spacing: -1.8px; }
       body.cdu-home .hero p { font-size: 15px; }
@@ -299,17 +328,22 @@
         <div class="logo">
           <img
             src="{{ Vite::asset('resources/images/logo.svg') }}"
-            alt="Logo" class="logo-img">
+            alt="Logo" class="logo-img logo-img-light">
+          <img
+            src="{{ Vite::asset('resources/images/logo_invert.svg') }}"
+            alt="Logo" class="logo-img logo-img-dark">
         </div>
-        <div class="nav-links">
+        <div class="nav-links" id="home-nav-menu" data-nav-menu>
           <a href="#inicio">Início</a>
           <a href="#como-funciona">Como Funciona</a>
           <a href="#sobre">Sobre</a>
         </div>
         <div class="nav-actions">
+          <x-theme-toggle />
           <a href="{{ route('login') }}" class="btn-login">Entrar</a>
           <a href="{{ route('register') }}" class="btn-cadastrar">Cadastrar</a>
         </div>
+        <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="home-nav-menu" aria-label="Abrir menu"><span></span><span></span><span></span></button>
       </nav>
     </header>
 

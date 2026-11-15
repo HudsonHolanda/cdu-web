@@ -1,6 +1,50 @@
 @import './home.css';
 @import './complaints.css';
+@import './backoffice.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    color-scheme: light;
+    --cdu-bg: #f5f7f5;
+    --cdu-surface: #ffffff;
+    --cdu-surface-muted: #f0f4f1;
+    --cdu-sidebar: #0b2b1b;
+    --cdu-text: #17251d;
+    --cdu-muted: #68756d;
+    --cdu-border: #dce5de;
+    --cdu-green: #4c7655;
+    --cdu-green-dark: #31563b;
+    --cdu-green-soft: #e8f1e9;
+    --cdu-orange: #ed7a1f;
+    --cdu-danger: #d84b4b;
+    --cdu-shadow: 0 12px 30px rgba(29, 60, 39, .08);
+}
+
+html.dark {
+    color-scheme: dark;
+    --cdu-bg: #0d1511;
+    --cdu-surface: #17221a;
+    --cdu-surface-muted: #1d2b21;
+    --cdu-sidebar: #071b10;
+    --cdu-text: #edf5ef;
+    --cdu-muted: #a6b5aa;
+    --cdu-border: #304337;
+    --cdu-green: #82b88b;
+    --cdu-green-dark: #a9d0ae;
+    --cdu-green-soft: #223b29;
+    --cdu-orange: #f49a4d;
+    --cdu-danger: #f08383;
+    --cdu-shadow: 0 12px 30px rgba(0, 0, 0, .24);
+}
+
+body {
+    background: var(--cdu-bg);
+    color: var(--cdu-text);
+}
+
+.cdu-logo-dark { display: none; }
+html.dark .cdu-logo-light { display: none; }
+html.dark .cdu-logo-dark { display: block; }

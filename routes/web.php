@@ -3,12 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\BackofficeController;
 
 Route::view('/', 'home');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeController $backoffice) {
+    return $request->user()->hasRole(\App\Enums\UserRole::AGENT)
+        ? $backoffice->home(app(\App\Services\ComplaintRepository::class))
+        : view('dashboard');
+})
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::get('dashboard/analytics', [BackofficeController::class, 'dashboard'])
+    ->middleware(['auth', 'verified', 'role:agent'])
+    ->name('admin.dashboard');
 
 Route::middleware(['auth', 'verified'])->prefix('denuncias')->name('complaints.')->group(function () {
     Route::get('/', [ComplaintController::class, 'index'])->name('index');

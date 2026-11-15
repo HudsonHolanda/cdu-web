@@ -24,17 +24,18 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
+<div class="cdu-auth-content">
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <form wire:submit="login">
         <div class="shrink-0 flex items-center justify-center">
-            <a href="{{ route('dashboard') }}" class="content-center" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="cdu-auth-logo" wire:navigate>
                 <x-application-logo class="block h-14 w-auto" />
             </a>
         </div>
 
+        <div class="cdu-auth-intro"><h1>Bem-vindo de volta</h1><p>Entre para acompanhar e cuidar da sua cidade.</p></div>
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />

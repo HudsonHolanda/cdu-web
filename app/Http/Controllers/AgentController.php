@@ -19,7 +19,7 @@ class AgentController extends Controller
 {
     public function index(): View
     {
-        return view('agents.index', [
+        return view()->file(resource_path('agent/index.blade.php'), [
             'agents' => User::agents()->orderBy('name')->paginate(15),
         ]);
     }
@@ -47,7 +47,7 @@ class AgentController extends Controller
     {
         $this->ensureAgent($agent);
 
-        return view('agents.edit', ['agent' => $agent]);
+        return view()->file(resource_path('agent/edit.blade.php'), ['agent' => $agent]);
     }
 
     public function update(Request $request, User $agent): RedirectResponse
