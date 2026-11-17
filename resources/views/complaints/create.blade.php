@@ -66,6 +66,7 @@
                             <label for="cep">CEP <span aria-hidden="true">*</span></label>
                             <input id="cep" name="cep" type="text" value="{{ old('cep') }}" inputmode="numeric" maxlength="9" required placeholder="00000-000" class="{{ $errors->has('cep') ? 'is-invalid' : '' }}">
                             @error('cep')<span class="complaint-field-error">{{ $message }}</span>@enderror
+                            <span id="cep-feedback" class="complaint-field-hint" role="status" aria-live="polite"></span>
                         </div>
                     </div>
 
@@ -130,6 +131,57 @@
         </div>
     </div>
     <script>
+        const cepInput = document.getElementById('cep');
+        const addressInput = document.getElementById('address');
+        const districtInput = document.getElementById('district');
+        const cepFeedback = document.getElementById('cep-feedback');
+        let cepRequest;
+
+        const formatCep = (value) => {
+            const digits = value.replace(/\D/g, '').slice(0, 8);
+            return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+        };
+
+        const lookupCep = async () => {
+            const cep = cepInput?.value.replace(/\D/g, '') || '';
+            if (cep.length !== 8 || !cepFeedback) return;
+
+            cepRequest?.abort();
+            cepRequest = new AbortController();
+            cepFeedback.textContent = 'Buscando endereço…';
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+                    signal: cepRequest.signal,
+                    headers: { Accept: 'application/json' },
+                });
+                if (!response.ok) throw new Error('Falha na consulta');
+
+                const data = await response.json();
+                if (data.erro) {
+                    cepFeedback.textContent = 'CEP não encontrado. Confira os números informados.';
+                    return;
+                }
+
+                if (data.logradouro) addressInput.value = data.logradouro;
+                if (data.bairro) districtInput.value = data.bairro;
+                cepFeedback.textContent = data.logradouro || data.bairro
+                    ? 'Endereço preenchido. Confira o número e o ponto de referência.'
+                    : 'CEP localizado, mas não há endereço detalhado disponível.';
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    cepFeedback.textContent = 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.';
+                }
+            }
+        };
+
+        cepInput?.addEventListener('input', () => {
+            cepInput.value = formatCep(cepInput.value);
+            if (cepInput.value.replace(/\D/g, '').length < 8 && cepFeedback) cepFeedback.textContent = '';
+            if (cepInput.value.replace(/\D/g, '').length === 8) lookupCep();
+        });
+        cepInput?.addEventListener('blur', lookupCep);
+
         document.getElementById('locate-me')?.addEventListener('click', () => {
             const feedback = document.getElementById('location-feedback');
             if (!navigator.geolocation) {
