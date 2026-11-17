@@ -18,6 +18,10 @@ Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeC
 Route::get('dashboard/analytics', [BackofficeController::class, 'dashboard'])
     ->middleware(['auth', 'verified', 'role:agent'])
     ->name('admin.dashboard');
+    
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::view('agent', 'agents/dashboard')->name('admin.dashboard');
+});
 
 Route::middleware(['auth', 'verified'])->prefix('denuncias')->name('complaints.')->group(function () {
     Route::get('/', [ComplaintController::class, 'index'])->name('index');
