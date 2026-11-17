@@ -15,7 +15,12 @@ class ComplaintFactory extends Factory
     public function definition(): array
     {
         return [
+            'public_id' => (string) \Illuminate\Support\Str::uuid(),
             'id_user' => User::factory(),
+            'category' => fake()->randomElement([
+                'Buraco na via', 'Iluminação pública', 'Lixo acumulado',
+                'Vazamento de água', 'Pragas e animais', 'Outros',
+            ]),
             'title' => fake()->randomElement([
                 'Buraco na rua', 'Iluminação queimada', 'Lixo acumulado',
                 'Vazamento de água', 'Semáforo com defeito', 'Árvore caída',

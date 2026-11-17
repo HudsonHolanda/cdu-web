@@ -14,6 +14,10 @@ const setTheme = (theme) => {
 };
 
 setTheme(localStorage.getItem(themeKey) || 'light');
+document.addEventListener('livewire:navigated', () => {
+    setTheme(localStorage.getItem(themeKey) || 'light');
+});
+
 document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-theme-toggle]');
     if (!button) return;

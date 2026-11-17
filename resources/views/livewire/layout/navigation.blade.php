@@ -34,8 +34,12 @@ new class extends Component
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.*')" wire:navigate>
+                    <x-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.index', 'complaints.create', 'complaints.store', 'complaints.show')" wire:navigate>
                         Denúncias
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('complaints.mine')" :active="request()->routeIs('complaints.mine', 'complaints.edit', 'complaints.update', 'complaints.destroy')" wire:navigate>
+                        Minhas denúncias
                     </x-nav-link>
 
                     @can('manage-agents')
@@ -96,8 +100,12 @@ new class extends Component
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.*')" wire:navigate>
+            <x-responsive-nav-link :href="route('complaints.index')" :active="request()->routeIs('complaints.index', 'complaints.create', 'complaints.store', 'complaints.show')" wire:navigate>
                 Denúncias
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('complaints.mine')" :active="request()->routeIs('complaints.mine', 'complaints.edit', 'complaints.update', 'complaints.destroy')" wire:navigate>
+                Minhas denúncias
             </x-responsive-nav-link>
 
             @can('manage-agents')
