@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // `user_id`, `status` e `high_priority` ficam de fora do Fillable de propósito:
 // o autor vem do usuário logado e status/prioridade só o agente/admin altera.
 #[Fillable([
-    'title', 'description', 'image_url',
+    'public_id', 'category', 'title', 'description', 'image_url',
     'latitude', 'longitude', 'address', 'district', 'cep', 'complement',
 ])]
 class Complaint extends Model
@@ -33,5 +34,10 @@ class Complaint extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ComplaintImage::class, 'complaint_id', 'complaint_id');
     }
 }

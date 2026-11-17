@@ -9,7 +9,7 @@ Route::view('/', 'home');
 
 Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeController $backoffice) {
     return $request->user()->hasRole(\App\Enums\UserRole::AGENT)
-        ? $backoffice->home(app(\App\Services\ComplaintRepository::class))
+        ? $backoffice->home()
         : view('dashboard');
 })
     ->middleware(['auth', 'verified'])
@@ -19,12 +19,17 @@ Route::get('dashboard/analytics', [BackofficeController::class, 'dashboard'])
     ->middleware(['auth', 'verified', 'role:agent'])
     ->name('admin.dashboard');
 
-Route::middleware(['auth', 'verified'])->prefix('denuncias')->name('complaints.')->group(function () {
+Route::middleware(['auth'])->prefix('denuncias')->name('complaints.')->group(function () {
     Route::get('/', [ComplaintController::class, 'index'])->name('index');
+    Route::get('/minhas', [ComplaintController::class, 'mine'])->name('mine');
     Route::get('/nova', [ComplaintController::class, 'create'])->name('create');
     Route::post('/', [ComplaintController::class, 'store'])->name('store');
     Route::get('/detalhe/{publicId}', [ComplaintController::class, 'show'])->name('show');
     Route::get('/imagens/{filename}', [ComplaintController::class, 'image'])->name('image');
+    Route::get('/{complaint}/editar', [ComplaintController::class, 'edit'])->name('edit');
+    Route::put('/{complaint}', [ComplaintController::class, 'update'])->name('update');
+    Route::patch('/{complaint}/status', [ComplaintController::class, 'updateStatus'])->name('status');
+    Route::delete('/{complaint}', [ComplaintController::class, 'destroy'])->name('destroy');
 });
 
 Route::view('profile', 'profile')
