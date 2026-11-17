@@ -9,40 +9,6 @@
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
   <style>
-    :root {
-      color-scheme: light;
-      --cdu-bg: #ffffff;
-      --cdu-surface: #ffffff;
-      --cdu-surface-soft: #f7faf7;
-      --cdu-text: #17251d;
-      --cdu-muted: #68756d;
-      --cdu-border: #e5ebe6;
-      --cdu-orange: #f28c28;
-      --cdu-orange-dark: #d97706;
-      --cdu-orange-soft: #fff4e8;
-      --cdu-green: #2f7d55;
-      --cdu-green-dark: #236342;
-      --cdu-green-soft: #eaf5ee;
-      --cdu-shadow: 0 18px 45px rgba(35, 99, 66, .08);
-    }
-
-    html.dark {
-      color-scheme: dark;
-      --cdu-bg: #0d1511;
-      --cdu-surface: #17221a;
-      --cdu-surface-soft: #1d2b21;
-      --cdu-text: #edf5ef;
-      --cdu-muted: #a6b5aa;
-      --cdu-border: #304337;
-      --cdu-green: #82b88b;
-      --cdu-green-dark: #a9d0ae;
-      --cdu-green-soft: #223b29;
-      --cdu-orange: #f49a4d;
-      --cdu-orange-dark: #dc7a30;
-      --cdu-orange-soft: #3b2b1d;
-      --cdu-shadow: 0 18px 45px rgba(0, 0, 0, .24);
-    }
-
     body.cdu-home {
       margin: 0;
       min-width: 320px;
@@ -201,7 +167,7 @@
       padding: 12px;
       border: 1px solid var(--cdu-border);
       border-radius: 18px;
-      background: var(--cdu-surface-soft);
+      background: var(--cdu-surface-muted);
       box-shadow: var(--cdu-shadow);
     }
     body.cdu-home .map-img { display: block; width: 100%; height: auto; border-radius: 11px; }
@@ -273,7 +239,7 @@
       background: var(--cdu-surface);
     }
     body.cdu-home .quote-mark { color: var(--cdu-orange); font-size: 38px; line-height: 1; font-weight: 800; }
-    body.cdu-home .quote { min-height: 92px; margin: 10px 0 22px; color: #4e5b52 !important; font-size: 14px; line-height: 1.75; }
+    body.cdu-home .quote { min-height: 92px; margin: 10px 0 22px; color: var(--cdu-muted) !important; font-size: 14px; line-height: 1.75; }
     body.cdu-home .t-person { display: flex; align-items: center; gap: 11px; }
     body.cdu-home .avatar {
       display: grid;
@@ -289,6 +255,29 @@
     }
     body.cdu-home .name { color: var(--cdu-text) !important; font-size: 13px; font-weight: 700; }
     body.cdu-home .place { margin-top: 3px; color: var(--cdu-muted) !important; font-size: 12px; }
+
+    body.cdu-home .about-project { padding-bottom: 82px; }
+    body.cdu-home .about-project-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr);
+      gap: 28px;
+      padding: 28px;
+      border: 1px solid var(--cdu-border);
+      border-radius: 16px;
+      background: var(--cdu-surface);
+      box-shadow: var(--cdu-shadow);
+    }
+    body.cdu-home .about-project-intro { display: flex; align-items: flex-start; gap: 16px; }
+    body.cdu-home .about-project-icon { display: grid; width: 52px; height: 52px; flex: 0 0 52px; place-items: center; border-radius: 12px; background: var(--cdu-green-soft); }
+    body.cdu-home .about-project-icon img { display: block; width: 38px; height: 38px; object-fit: contain; }
+    body.cdu-home .about-project-icon .about-project-logo-dark { display: none; }
+    html.dark body.cdu-home .about-project-icon .about-project-logo-light { display: none; }
+    html.dark body.cdu-home .about-project-icon .about-project-logo-dark { display: block; }
+    body.cdu-home .about-project-card h3 { margin: 0 0 8px; color: var(--cdu-text); font-size: 17px; }
+    body.cdu-home .about-project-card p { margin: 0; color: var(--cdu-muted); font-size: 14px; line-height: 1.75; }
+    body.cdu-home .about-project-team { border-left: 1px solid var(--cdu-border); padding-left: 28px; }
+    body.cdu-home .about-project-team ul { display: grid; gap: 8px; margin: 0; padding: 0; color: var(--cdu-muted); font-size: 14px; list-style: none; }
+    body.cdu-home .about-project-team li::before { margin-right: 8px; color: var(--cdu-green); content: '•'; }
 
     @media (max-width: 900px) {
       body.cdu-home header { padding: 16px 0; }
@@ -319,6 +308,8 @@
       body.cdu-home .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       body.cdu-home .testimonials { grid-template-columns: 1fr; }
       body.cdu-home .quote { min-height: 0; }
+      body.cdu-home .about-project-card { grid-template-columns: 1fr; }
+      body.cdu-home .about-project-team { border-top: 1px solid var(--cdu-border); border-left: 0; padding-top: 24px; padding-left: 0; }
     }
 
     @media (max-width: 560px) {
@@ -492,6 +483,36 @@
           </div>
         </div>
       </div>
+
+      <hr class="divider">
+
+      <section id="sobre" class="about-project" aria-labelledby="about-project-title">
+        <div class="section-head">
+          <h2 id="about-project-title">Sobre o projeto</h2>
+          <p>Uma iniciativa para aproximar a comunidade da transformação da cidade.</p>
+        </div>
+        <div class="about-project-card">
+          <div class="about-project-intro">
+            <span class="about-project-icon" aria-hidden="true">
+              <img src="{{ Vite::asset('resources/images/logo.svg') }}" alt="" class="about-project-logo-light">
+              <img src="{{ Vite::asset('resources/images/logo_invert.svg') }}" alt="" class="about-project-logo-dark">
+            </span>
+            <div>
+              <h3>C.D.U — Centro de Denúncias Urbanas</h3>
+              <p>O Centro de Denúncias Urbanas conecta cidadãos e poder público para identificar, acompanhar e resolver problemas urbanos de forma simples, transparente e colaborativa.</p>
+            </div>
+          </div>
+          <div class="about-project-team">
+            <h3>Desenvolvedores</h3>
+            <ul>
+              <li>Daniel Sobral</li>
+              <li>Deyvid Borges</li>
+              <li>Hudson Holanda</li>
+              <li>Mateus Lima</li>
+            </ul>
+          </div>
+        </div>
+      </section>
     </section>
   </div>
 

@@ -98,12 +98,13 @@
 .complaint-description-panel > p:last-child { margin: .8rem 0 0; color: #d0d8d2; font-size: .96rem; line-height: 1.75; white-space: pre-line; }
 .complaint-location-panel address { margin: .85rem 0 1rem; color: #b0bcb5; font-size: .9rem; font-style: normal; line-height: 1.7; }
 .complaint-location-panel address strong { color: var(--complaints-ink); }
-.complaint-map-card { display: flex; align-items: center; gap: .8rem; min-width: 0; border: 1px solid #344b3a; border-radius: .75rem; padding: .85rem; background: linear-gradient(135deg, #20352a, #1a2930); }
-.complaint-map-pin { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #dcebdd; color: var(--complaints-green); font-size: 1.4rem; }
-.complaint-map-card > div { display: grid; min-width: 0; gap: .2rem; }
-.complaint-map-card > div strong { font-size: .85rem; }
-.complaint-map-card > div span { overflow-wrap: anywhere; color: var(--complaints-muted); font-size: .72rem; }
-.complaint-map-card > a { margin-left: auto; flex: 0 0 auto; color: var(--complaints-green); font-size: .8rem; font-weight: 700; text-decoration: none; }
+.complaint-map-card { overflow: hidden; min-width: 0; border: 1px solid var(--complaints-line); border-radius: .75rem; background: var(--complaints-input); }
+.complaint-map-embed { display: block; width: 100%; height: 220px; border: 0; }
+.complaint-map-footer { display: flex; align-items: center; gap: .8rem; padding: .85rem; }
+.complaint-map-footer > div { display: grid; min-width: 0; gap: .2rem; }
+.complaint-map-footer strong { font-size: .85rem; }
+.complaint-map-footer span { overflow-wrap: anywhere; color: var(--complaints-muted); font-size: .72rem; }
+.complaint-map-footer > a { margin-left: auto; flex: 0 0 auto; color: var(--complaints-green); font-size: .8rem; font-weight: 700; text-decoration: none; }
 .complaint-summary-card h2 { margin-bottom: 1.3rem; }
 .complaint-summary-card dl { display: grid; gap: 1rem; margin: 0; }
 .complaint-summary-card dl > div { display: grid; gap: .35rem; }
@@ -182,8 +183,8 @@
     .complaint-attachment-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 110px; }
     .complaint-attachment--primary { grid-column: span 2; grid-row: span 2; }
     .complaint-detail-tabs { gap: 1.2rem; }
-    .complaint-map-card { flex-wrap: wrap; }
-    .complaint-map-card > a { margin-left: 3.3rem; }
+    .complaint-map-footer { flex-wrap: wrap; }
+    .complaint-map-footer > a { margin-left: 0; }
     .complaint-create-aside { grid-template-columns: 1fr; }
     .complaint-form-row { grid-template-columns: 1fr; gap: 0; }
     .complaint-form-actions { flex-direction: column-reverse; }
