@@ -18,6 +18,13 @@ Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeC
 Route::get('dashboard/analytics', [BackofficeController::class, 'dashboard'])
     ->middleware(['auth', 'verified', 'role:agent'])
     ->name('admin.dashboard');
+    
+Route::middleware(['auth', 'verified', 'can:access-agent-panel'])->group(function () {
+    Route::view('painel', 'agents.overview')->name('agent.overview');
+    Route::view('painel/dashboard', 'agents.dashboard')->name('agent.dashboard');
+    Route::view('painel/mapa', 'agents.mapa')->name('agent.mapa');
+    Route::view('painel/relatorios', 'agents.relatorios')->name('agent.relatorios');
+});
 
 Route::middleware(['auth', 'verified'])->prefix('denuncias')->name('complaints.')->group(function () {
     Route::get('/', [ComplaintController::class, 'index'])->name('index');
