@@ -3,6 +3,9 @@
         $location = $complaint['location'];
         $attachments = $complaint['attachments'] ?? [$complaint['imageUrl']];
         $mapUrl = 'https://www.openstreetmap.org/?mlat='.$location['latitude'].'&mlon='.$location['longitude'].'#map=17/'.$location['latitude'].'/'.$location['longitude'];
+        $latitude = (float) $location['latitude'];
+        $longitude = (float) $location['longitude'];
+        $mapEmbedUrl = 'https://www.openstreetmap.org/export/embed.html?bbox='.(($longitude - 0.006)).','.($latitude - 0.004).','.($longitude + 0.006).','.($latitude + 0.004).'&layer=mapnik&marker='.$latitude.','.$longitude;
     @endphp
     <div class="complaints-page complaint-detail-page">
         <a class="complaint-back-link" href="{{ route('complaints.index') }}"><span aria-hidden="true">←</span> Voltar para denúncias</a>
@@ -62,10 +65,12 @@
                         {{ $location['district'] }} · CEP {{ $location['cep'] }}
                         @if (!empty($location['complement']))<br>{{ $location['complement'] }}@endif
                     </address>
-                    <div class="complaint-map-card" role="img" aria-label="Coordenadas aproximadas da denúncia: {{ $location['latitude'] }}, {{ $location['longitude'] }}">
-                        <span class="complaint-map-pin" aria-hidden="true">⌖</span>
-                        <div><strong>{{ $location['district'] }}</strong><span>{{ $location['latitude'] }}, {{ $location['longitude'] }}</span></div>
-                        <a href="{{ $mapUrl }}" target="_blank" rel="noopener">Abrir mapa <span aria-hidden="true">↗</span></a>
+                    <div class="complaint-map-card">
+                        <iframe class="complaint-map-embed" src="{{ $mapEmbedUrl }}" title="Mapa da localização da denúncia" loading="lazy"></iframe>
+                        <div class="complaint-map-footer">
+                            <div><strong>{{ $location['district'] }}</strong><span>{{ $location['latitude'] }}, {{ $location['longitude'] }}</span></div>
+                            <a href="{{ $mapUrl }}" target="_blank" rel="noopener">Abrir mapa <span aria-hidden="true">↗</span></a>
+                        </div>
                     </div>
                 </section>
             </main>
