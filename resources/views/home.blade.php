@@ -63,9 +63,15 @@
     body.cdu-home header {
       position: relative;
       z-index: 2;
+      width: 100%;
       padding: 22px 0;
       border-bottom: 1px solid var(--cdu-border);
       background: color-mix(in srgb, var(--cdu-surface) 94%, transparent);
+    }
+
+    body.cdu-home header nav {
+      width: min(1120px, calc(100% - 48px));
+      margin: 0 auto;
     }
 
     body.cdu-home nav {
@@ -110,6 +116,7 @@
       gap: 10px;
       flex: 0 0 auto;
     }
+    body.cdu-home .nav-links .cdu-theme-toggle { display: none; }
 
     body.cdu-home .btn-login,
     body.cdu-home .btn-cadastrar {
@@ -283,8 +290,30 @@
     body.cdu-home .name { color: var(--cdu-text) !important; font-size: 13px; font-weight: 700; }
     body.cdu-home .place { margin-top: 3px; color: var(--cdu-muted) !important; font-size: 12px; }
 
+    @media (max-width: 900px) {
+      body.cdu-home header { padding: 16px 0; }
+      body.cdu-home header nav { position: relative; flex-wrap: nowrap; gap: 10px; }
+      body.cdu-home .logo-img { width: 112px; }
+      body.cdu-home .nav-links { display: none !important; position: absolute !important; top: calc(100% + 10px) !important; left: 0 !important; right: 0 !important; z-index: 5 !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; gap: 3px !important; width: auto !important; margin: 0 !important; padding: 8px !important; border: 1px solid var(--cdu-border) !important; border-radius: 14px !important; background: var(--cdu-surface) !important; box-shadow: var(--cdu-shadow) !important; }
+      body.cdu-home .nav-links.is-open { display: flex !important; }
+      body.cdu-home .nav-links a { display: flex !important; align-items: center !important; justify-content: flex-start !important; min-height: 44px !important; padding: 0 14px !important; border-radius: 8px !important; color: var(--cdu-text) !important; font-size: 14px !important; }
+      body.cdu-home .nav-links a:hover { background: var(--cdu-green-soft) !important; color: var(--cdu-text) !important; }
+      body.cdu-home .nav-actions { margin-left: auto; gap: 7px; }
+      body.cdu-home .nav-actions .cdu-theme-toggle { display: none; }
+      body.cdu-home .nav-links .cdu-theme-toggle { display: inline-flex; width: 100%; min-height: 44px; justify-content: flex-start; margin-top: 4px; padding: 0 14px; border: 0; border-top: 1px solid var(--cdu-border); border-radius: 0; background: transparent; color: var(--cdu-text); text-align: left; }
+      body.cdu-home .nav-toggle { display: inline-flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 5px !important; width: 42px !important; height: 42px !important; flex: 0 0 42px !important; border: 1px solid var(--cdu-border) !important; border-radius: 10px !important; background: var(--cdu-surface) !important; cursor: pointer !important; }
+      body.cdu-home .nav-toggle span { display: block !important; width: 21px !important; height: 2px !important; border-radius: 2px !important; background: var(--cdu-text) !important; transition: transform .2s ease, opacity .2s ease; }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+      body.cdu-home .btn-login, body.cdu-home .btn-cadastrar { min-height: 38px; padding: 0 12px; font-size: 12px; }
+    }
+
+    @media (min-width: 901px) {
+      body.cdu-home .nav-toggle { display: none; }
+    }
+
     @media (max-width: 820px) {
-      body.cdu-home .nav-links { gap: 16px; }
       body.cdu-home .hero-grid { grid-template-columns: 1fr; gap: 36px; }
       body.cdu-home .hero { padding-top: 52px; }
       body.cdu-home .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -294,21 +323,6 @@
 
     @media (max-width: 560px) {
       body.cdu-home .container { width: min(100% - 32px, 1120px); }
-      body.cdu-home header { padding: 16px 0; }
-      body.cdu-home nav { position: relative; flex-wrap: nowrap; gap: 10px; }
-      body.cdu-home .logo-img { width: 112px; }
-      body.cdu-home .nav-links { display: none !important; position: absolute !important; top: calc(100% + 10px) !important; left: 0 !important; right: 0 !important; z-index: 5 !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; gap: 3px !important; width: auto !important; margin: 0 !important; padding: 8px !important; border: 1px solid var(--cdu-border) !important; border-radius: 14px !important; background: var(--cdu-surface) !important; box-shadow: var(--cdu-shadow) !important; }
-      body.cdu-home .nav-links.is-open { display: flex !important; }
-      body.cdu-home .nav-links a { display: flex !important; align-items: center !important; justify-content: flex-start !important; min-height: 44px !important; padding: 0 14px !important; border-radius: 8px !important; color: var(--cdu-text) !important; font-size: 14px !important; }
-      body.cdu-home .nav-links a:hover { background: var(--cdu-green-soft) !important; color: var(--cdu-text) !important; }
-      body.cdu-home .nav-actions { margin-left: auto; gap: 7px; }
-      body.cdu-home .nav-actions .cdu-theme-toggle { display: none; }
-      body.cdu-home .nav-toggle { display: inline-flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 5px !important; width: 42px !important; height: 42px !important; flex: 0 0 42px !important; border: 1px solid var(--cdu-border) !important; border-radius: 10px !important; background: var(--cdu-surface) !important; cursor: pointer !important; }
-      body.cdu-home .nav-toggle span { display: block !important; width: 21px !important; height: 2px !important; border-radius: 2px !important; background: var(--cdu-text) !important; transition: transform .2s ease, opacity .2s ease; }
-      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-      body.cdu-home .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-      body.cdu-home .btn-login, body.cdu-home .btn-cadastrar { min-height: 38px; padding: 0 12px; font-size: 12px; }
       body.cdu-home .hero h1 { font-size: 43px; letter-spacing: -1.8px; }
       body.cdu-home .hero p { font-size: 15px; }
       body.cdu-home .stats { gap: 8px; margin-top: 38px; padding: 19px 7px; }
@@ -322,8 +336,7 @@
 
 <body class="cdu-home">
 
-  <div class="container">
-    <header>
+  <header>
       <nav>
         <div class="logo">
           <img
@@ -337,6 +350,7 @@
           <a href="#inicio">Início</a>
           <a href="#como-funciona">Como Funciona</a>
           <a href="#sobre">Sobre</a>
+          <x-theme-toggle />
         </div>
         <div class="nav-actions">
           <x-theme-toggle />
@@ -345,8 +359,9 @@
         </div>
         <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="home-nav-menu" aria-label="Abrir menu"><span></span><span></span><span></span></button>
       </nav>
-    </header>
+  </header>
 
+  <div class="container">
     <!-- HERO -->
     <section class="hero" id="inicio">
       <div class="hero-grid">

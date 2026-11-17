@@ -16,5 +16,5 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.addEventListener('click', () => setOpen(!menu.classList.contains('is-open')));
     menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
     document.addEventListener('keydown', (e) => e.key === 'Escape' && setOpen(false));
-    window.matchMedia('(min-width: 701px)').addEventListener('change', (e) => e.matches && setOpen(false));
+    window.matchMedia('(min-width: 901px)').addEventListener('change', (e) => e.matches && setOpen(false));
 });

@@ -63,7 +63,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="register">
         <div class="shrink-0 flex items-center justify-center">
             <a href="{{ route('dashboard') }}" class="cdu-auth-logo" wire:navigate>
-                <x-application-logo class="block h-14 w-auto" />
+                <img src="{{ Vite::asset('resources/images/logo_invert.svg') }}" alt="C.D.U" class="block h-14 w-auto" />
             </a>
         </div>
 

@@ -19,7 +19,6 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="cdu-auth-page min-h-screen min-h-dvh flex flex-col justify-center items-center px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] py-6">
-            <div class="cdu-auth-toolbar"><x-theme-toggle /></div>
             <div class="cdu-auth-card w-full max-w-md mt-0 px-5 sm:px-6 py-5 shadow-md overflow-hidden rounded-lg">
                 {{ $slot }}
             </div>
