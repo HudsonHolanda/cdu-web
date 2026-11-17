@@ -6,7 +6,8 @@
     <nav class="cdu-sidebar-nav">
         <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}" wire:navigate><span>⌂</span> Visão Geral</a>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" wire:navigate><span>▦</span> Dashboard</a>
-        <a href="{{ route('complaints.index') }}" class="{{ request()->routeIs('complaints.*') ? 'is-active' : '' }}" wire:navigate><span>▤</span> Denúncias</a>
+        <a href="{{ route('complaints.index') }}" class="{{ request()->routeIs('complaints.index', 'complaints.create', 'complaints.store', 'complaints.show') ? 'is-active' : '' }}" wire:navigate><span>▤</span> Denúncias</a>
+        <a href="{{ route('complaints.mine') }}" class="{{ request()->routeIs('complaints.mine', 'complaints.edit', 'complaints.update', 'complaints.destroy') ? 'is-active' : '' }}" wire:navigate><span>▣</span> Minhas denúncias</a>
         @admin
             <a href="{{ route('agents.index') }}" class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" wire:navigate><span>♙</span> Usuários</a>
             <a href="#" class="cdu-sidebar-disabled"><span>▥</span> Relatórios</a>

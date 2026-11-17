@@ -3,15 +3,23 @@
         <div class="complaints-heading">
             <div>
                 <p class="complaints-eyebrow">Participação cidadã</p>
-                <h1>Denúncias</h1>
-                <p class="complaints-lead">Acompanhe os relatos da sua cidade e ajude a melhorar o lugar onde você vive.</p>
+                <h1>{{ ($myComplaints ?? false) ? 'Minhas denúncias' : 'Denúncias' }}</h1>
+                <p class="complaints-lead">{{ ($myComplaints ?? false) ? 'Acompanhe e gerencie os relatos enviados pela sua conta.' : 'Acompanhe os relatos da sua cidade e ajude a melhorar o lugar onde você vive.' }}</p>
             </div>
-            <a class="complaints-create-link" href="{{ route('complaints.create') }}">
+            @if ($myComplaints ?? false)
+                <a class="complaints-create-link" href="{{ route('complaints.index') }}">Ver todas as denúncias</a>
+            @else
+                <a class="complaints-create-link" href="{{ route('complaints.create') }}">
                 <span aria-hidden="true">＋</span> Fazer denúncia
-            </a>
+                </a>
+            @endif
         </div>
 
-        <form class="complaints-search" method="GET" action="{{ route('complaints.index') }}" role="search">
+        @if (session('success'))
+            <div class="complaint-success-message" role="status">{{ session('success') }}</div>
+        @endif
+
+        <form class="complaints-search" method="GET" action="{{ route(($myComplaints ?? false) ? 'complaints.mine' : 'complaints.index') }}" role="search">
             <label class="sr-only" for="complaints-search">Buscar denúncias</label>
             <input id="complaints-search" name="busca" type="search" value="{{ $search }}" placeholder="Buscar por título, descrição ou endereço">
             <button type="submit">Buscar</button>
@@ -25,8 +33,8 @@
         @if ($complaints->isEmpty())
             <div class="complaints-empty">
                 <span class="complaints-empty-icon" aria-hidden="true">⌕</span>
-                <h2>Nenhuma denúncia encontrada</h2>
-                <p>Tente buscar por outro termo.</p>
+                <h2>{{ ($myComplaints ?? false) ? 'Você ainda não enviou denúncias' : 'Nenhuma denúncia encontrada' }}</h2>
+                <p>{{ ($myComplaints ?? false) ? 'Quando enviar um relato, ele aparecerá nesta página.' : 'Tente buscar por outro termo.' }}</p>
             </div>
         @else
             <div class="complaints-grid">
@@ -49,6 +57,16 @@
                             </div>
                             <div class="complaint-card-footer">
                                 <span>Publicada em {{ \Illuminate\Support\Carbon::parse($complaint['createdAt'])->format('d/m/Y') }}</span>
+                                @if (($myComplaints ?? false) && $complaint['status'] === 'Pendente')
+                                    <div class="complaint-card-actions">
+                                        <a class="complaint-action-link" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">Editar</a>
+                                        <form method="POST" action="{{ route('complaints.destroy', ['complaint' => $complaint['complaintId']]) }}" onsubmit="return confirm('Excluir este relato? Esta ação não pode ser desfeita.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="complaint-action-link complaint-action-delete" type="submit">Excluir</button>
+                                        </form>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </article>

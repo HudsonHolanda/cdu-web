@@ -24,13 +24,14 @@ class AppServiceProvider extends ServiceProvider
     {
         // Define gates para as user roles
         Gate::define('report-problems',    fn (User $u) => $u->hasRole(UserRole::CITIZEN));
+        Gate::define('access-agent-panel', fn (User $u) => $u->isAgent());
         Gate::define('manage-resolutions', fn (User $u) => $u->hasRole(UserRole::AGENT));
         Gate::define('manage-agents',      fn (User $u) => $u->hasRole(UserRole::ADMIN));
         Gate::define('moderate',           fn (User $u) => $u->hasRole(UserRole::ADMIN));
 
         // Diretivas pra cada UserRole, para uso nos templates Blade
         Blade::if('citizen', fn () => auth()->user()?->hasRole(UserRole::CITIZEN));
-        Blade::if('agent', fn () => auth()->user()?->hasRole(UserRole::AGENT));
+        Blade::if('agent', fn () => auth()->user()?->isAgent());
         Blade::if('admin', fn () => auth()->user()?->hasRole(UserRole::ADMIN));
     }
 }
