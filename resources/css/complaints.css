@@ -182,3 +182,60 @@
     .complaint-form-actions { flex-direction: column-reverse; }
     .complaint-cancel-button, .complaint-submit-button { width: 100%; }
 }
+
+/* Tema claro é o padrão; o tema escuro reutiliza os mesmos tokens. */
+.complaints-page {
+    --complaints-ink: var(--cdu-text);
+    --complaints-muted: var(--cdu-muted);
+    --complaints-green: var(--cdu-green);
+    --complaints-soft: var(--cdu-surface-muted);
+    --complaints-panel: var(--cdu-surface);
+    --complaints-input: var(--cdu-surface-muted);
+    --complaints-line: var(--cdu-border);
+}
+
+.complaints-page .complaints-search input,
+.complaints-page .complaint-field input,
+.complaints-page .complaint-field select,
+.complaints-page .complaint-field textarea { border-color: var(--complaints-line); background: var(--complaints-input); color: var(--complaints-ink); }
+.complaints-page .complaints-search input::placeholder,
+.complaints-page .complaint-field input::placeholder,
+.complaints-page .complaint-field textarea::placeholder { color: var(--complaints-muted); }
+.complaints-page .complaints-search button { border-color: var(--cdu-green); background: var(--cdu-green-soft); color: var(--cdu-green-dark); }
+.complaints-page .complaint-card,
+.complaints-page .complaint-detail-panel,
+.complaints-page .complaint-form-panel,
+.complaints-page .complaint-tips-card,
+.complaints-page .complaint-privacy-card { border-color: var(--complaints-line); background: var(--complaints-panel); color: var(--complaints-ink); }
+.complaints-page .complaint-card-footer { border-color: var(--complaints-line); color: var(--complaints-muted); }
+.complaints-page .complaint-status { border-color: var(--complaints-line); background: var(--complaints-soft); color: var(--cdu-orange); }
+.complaints-page .complaints-empty { border-color: var(--complaints-line); background: var(--complaints-panel); }
+.complaints-page .complaint-detail-heading > .complaint-status,
+.complaints-page .complaint-summary-card dd .complaint-status { border-color: var(--complaints-line); background: var(--complaints-soft); }
+.complaints-page .complaint-detail-meta,
+.complaints-page .complaint-section-heading > span,
+.complaints-page .complaint-location-panel address,
+.complaints-page .complaint-history-note,
+.complaints-page .complaint-form-section-heading p,
+.complaints-page .complaint-optional,
+.complaints-page .complaint-field-hint { color: var(--complaints-muted); }
+.complaints-page .complaint-detail-tabs { border-color: var(--complaints-line); }
+.complaints-page .complaint-detail-tabs a { color: var(--complaints-muted); }
+.complaints-page .complaint-description-panel > p:last-child { color: var(--complaints-text, var(--complaints-ink)); }
+.complaints-page .complaint-form-section + .complaint-form-section,
+.complaints-page .complaint-form-actions { border-color: var(--complaints-line); }
+.complaints-page .complaint-field label { color: var(--complaints-ink); }
+.complaints-page .complaint-upload-box { border-color: var(--complaints-line); background: var(--complaints-input); color: var(--complaints-ink); }
+.complaints-page .complaint-tips-card { border-color: var(--cdu-green); background: var(--cdu-green-soft); }
+.complaints-page .complaint-tips-card h2,
+.complaints-page .complaint-privacy-card h2,
+.complaints-page .complaint-tips-card ul,
+.complaints-page .complaint-privacy-card p { color: var(--complaints-ink); }
+.complaints-page .complaint-map-card { border-color: var(--cdu-green); background: var(--cdu-green-soft); }
+.complaints-page .complaint-timeline-marker { background: var(--complaints-panel); }
+
+html.dark .complaints-page {
+    --complaints-panel: #17212b;
+    --complaints-input: #111a24;
+    --complaints-line: #2d3a45;
+}

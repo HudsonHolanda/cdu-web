@@ -59,14 +59,15 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
+<div class="cdu-auth-content">
     <form wire:submit="register">
         <div class="shrink-0 flex items-center justify-center">
-            <a href="{{ route('dashboard') }}" wire:navigate>
-                <x-application-logo class="block h-14 w-auto" />
+            <a href="{{ route('dashboard') }}" class="cdu-auth-logo" wire:navigate>
+                <img src="{{ Vite::asset('resources/images/logo_invert.svg') }}" alt="C.D.U" class="block h-14 w-auto" />
             </a>
         </div>
 
+        <div class="cdu-auth-intro"><h1>Crie sua conta</h1><p>Participe da transformação da sua cidade.</p></div>
         <!-- Name -->
         <div>
             <x-input-label for="name" :value="__('Name')" />
