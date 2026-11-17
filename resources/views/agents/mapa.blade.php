@@ -83,7 +83,7 @@
                     <nav class="space-y-2">
                         <a href="{{ route('agent.overview') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
                             <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">◫</span>
-                            Visão Geral
+                            Overview
                         </a>
                         <a href="{{ route('agent.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
                             <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">▣</span>
