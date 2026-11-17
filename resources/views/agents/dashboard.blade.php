@@ -24,32 +24,30 @@
         <aside class="hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
             <div>
                 <div class="mb-10 flex items-center gap-3 px-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-xl font-bold shadow-sm ring-1 ring-white/20">
-                        CDU
+                    <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10 shadow-sm ring-1 ring-white/20">
+                        <img src="{{ Vite::asset('resources/images/logo.svg') }}" alt="CDU" class="h-9 w-9 object-contain" style="filter: brightness(0) invert(1);">
                     </div>
-                    <div>
-                        <div class="text-2xl font-black tracking-tight">CDU</div>
-                    </div>
+                    <div class="text-2xl font-black tracking-tight text-white">CDU</div>
                 </div>
 
                 <nav class="space-y-2">
-                    <a href="#" class="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3 text-sm font-medium text-white ring-1 ring-white/10">
+                    <a href="{{ route('agent.overview') }}" class="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3 text-sm font-medium text-white ring-1 ring-white/10">
                         <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/10">◫</span>
                         Visão Geral
                     </a>
-                    <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
+                    <a href="{{ route('agent.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
                         <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">▣</span>
-                        Denúncias
-                    </a>
-                    <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
-                        <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">▤</span>
                         Dashboard
                     </a>
-                    <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
+                    <a href="{{ route('agent.mapa') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
+                        <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">▤</span>
+                        Mapa
+                    </a>
+                    <a href="{{ route('agents.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
                         <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">◎</span>
                         Usuários
                     </a>
-                    <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
+                    <a href="{{ route('agent.relatorios') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-200/90 transition hover:bg-white/5">
                         <span class="flex h-7 w-7 items-center justify-center rounded-md bg-white/5">◌</span>
                         Relatórios
                     </a>
