@@ -516,6 +516,8 @@
     </section>
   </div>
 
+  <x-back-to-top />
+
 </body>
 
 </html>

@@ -13,9 +13,22 @@ const setTheme = (theme) => {
     });
 };
 
+const setupBackToTop = () => {
+    const button = document.querySelector('[data-back-to-top]');
+    if (!button || button.dataset.ready) return;
+
+    button.dataset.ready = 'true';
+    const updateVisibility = () => button.classList.toggle('is-visible', window.scrollY > 420);
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    updateVisibility();
+};
+
 setTheme(localStorage.getItem(themeKey) || 'light');
+setupBackToTop();
 document.addEventListener('livewire:navigated', () => {
     setTheme(localStorage.getItem(themeKey) || 'light');
+    setupBackToTop();
 });
 
 document.addEventListener('click', (event) => {

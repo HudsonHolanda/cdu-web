@@ -30,7 +30,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     <form wire:submit="login">
         <div class="shrink-0 flex items-center justify-center">
-            <a href="{{ route('dashboard') }}" class="cdu-auth-logo" wire:navigate>
+            <a href="{{ url('/') }}" class="cdu-auth-logo" wire:navigate>
                 <img src="{{ Vite::asset('resources/images/logo_invert.svg') }}" alt="C.D.U" class="block h-14 w-auto" />
             </a>
         </div>
@@ -75,4 +75,8 @@ new #[Layout('layouts.guest')] class extends Component
             </x-primary-button>
         </div>
     </form>
+    <nav class="cdu-auth-navigation" aria-label="Navegação da autenticação">
+        <a href="{{ url('/') }}" wire:navigate>← Voltar para a home</a>
+        <a href="{{ route('register') }}" wire:navigate>Criar uma conta</a>
+    </nav>
 </div>

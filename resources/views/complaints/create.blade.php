@@ -77,17 +77,17 @@
 
                     <div class="complaint-form-row">
                         <div class="complaint-field">
-                            <label for="latitude">Latitude <span aria-hidden="true">*</span></label>
+                            <label for="latitude">Latitude <span class="complaint-optional">Preenchida pelo CEP</span></label>
                             <input id="latitude" name="latitude" type="number" value="{{ old('latitude') }}" min="-90" max="90" step="any" required placeholder="Ex.: -23.5505" class="{{ $errors->has('latitude') ? 'is-invalid' : '' }}">
                             @error('latitude')<span class="complaint-field-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="complaint-field">
-                            <label for="longitude">Longitude <span aria-hidden="true">*</span></label>
+                            <label for="longitude">Longitude <span class="complaint-optional">Preenchida pelo CEP</span></label>
                             <input id="longitude" name="longitude" type="number" value="{{ old('longitude') }}" min="-180" max="180" step="any" required placeholder="Ex.: -46.6333" class="{{ $errors->has('longitude') ? 'is-invalid' : '' }}">
                             @error('longitude')<span class="complaint-field-error">{{ $message }}</span>@enderror
                         </div>
                     </div>
-                    <p class="complaint-field-hint">Use a latitude e longitude do local. Você pode encontrá-las tocando no ponto desejado em um aplicativo de mapas.</p>
+                    <p class="complaint-field-hint">Ao informar um CEP, a localização aproximada será preenchida automaticamente. Você ainda pode ajustar as coordenadas se necessário.</p>
                     <button id="locate-me" class="complaint-location-button" type="button">Usar minha localização atual</button>
                     <span id="location-feedback" class="complaint-field-hint" role="status"></span>
                 </section>
@@ -134,12 +134,32 @@
         const cepInput = document.getElementById('cep');
         const addressInput = document.getElementById('address');
         const districtInput = document.getElementById('district');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
         const cepFeedback = document.getElementById('cep-feedback');
         let cepRequest;
 
         const formatCep = (value) => {
             const digits = value.replace(/\D/g, '').slice(0, 8);
             return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+        };
+
+        const lookupCoordinates = async (addressData) => {
+            const query = [addressData.logradouro, addressData.bairro, addressData.localidade, addressData.uf, 'Brasil']
+                .filter(Boolean)
+                .join(', ');
+            const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1', countrycodes: 'br' });
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+                headers: { Accept: 'application/json' },
+            });
+            if (!response.ok) throw new Error('Falha ao localizar o endereço');
+
+            const [result] = await response.json();
+            if (!result) return false;
+
+            latitudeInput.value = Number(result.lat).toFixed(6);
+            longitudeInput.value = Number(result.lon).toFixed(6);
+            return true;
         };
 
         const lookupCep = async () => {
@@ -166,8 +186,18 @@
                 if (data.logradouro) addressInput.value = data.logradouro;
                 if (data.bairro) districtInput.value = data.bairro;
                 cepFeedback.textContent = data.logradouro || data.bairro
-                    ? 'Endereço preenchido. Confira o número e o ponto de referência.'
+                    ? 'Endereço preenchido. Buscando localização aproximada…'
                     : 'CEP localizado, mas não há endereço detalhado disponível.';
+                if (data.logradouro || data.bairro) {
+                    try {
+                        const coordinatesFound = await lookupCoordinates(data);
+                        cepFeedback.textContent = coordinatesFound
+                            ? 'Endereço e localização aproximada preenchidos. Confira o número e o ponto de referência.'
+                            : 'Endereço preenchido, mas não foi possível localizar as coordenadas automaticamente.';
+                    } catch {
+                        cepFeedback.textContent = 'Endereço preenchido. Não foi possível localizar as coordenadas automaticamente.';
+                    }
+                }
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     cepFeedback.textContent = 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.';

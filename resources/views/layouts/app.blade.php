@@ -47,6 +47,9 @@
                 @endif
                 {{ $slot }}
             </main>
+            @unless (request()->routeIs('complaints.create', 'complaints.edit'))
+                <x-back-to-top />
+            @endunless
         </div>
     </body>
 </html>
