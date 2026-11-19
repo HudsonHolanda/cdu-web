@@ -8,6 +8,7 @@ use App\Models\Complaint;
 use App\Models\ComplaintImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -288,6 +289,62 @@ class ComplaintController extends Controller
         abort_unless(is_file($legacyPath), 404);
 
         return response()->file($legacyPath);
+    }
+
+    public function geocode(Request $request)
+    {
+        $data = $request->validate([
+            'endereco' => ['nullable', 'string', 'max:180'],
+            'bairro' => ['nullable', 'string', 'max:100'],
+            'cidade' => ['nullable', 'string', 'max:100'],
+            'estado' => ['nullable', 'string', 'max:100'],
+            'cep' => ['nullable', 'string', 'max:9'],
+        ]);
+
+        $client = Http::acceptJson()->withHeaders([
+            'User-Agent' => 'C.D.U/1.0 (+'.config('app.url', 'http://127.0.0.1:8000').')',
+            'Referer' => config('app.url', 'http://127.0.0.1:8000').'/',
+        ])->retry(2, 300)->timeout(10);
+
+        $street = implode(', ', array_filter([$data['endereco'] ?? '', $data['bairro'] ?? '']));
+        $response = $client->get('https://nominatim.openstreetmap.org/search', [
+            'street' => $street,
+            'city' => $data['cidade'] ?? '',
+            'state' => $data['estado'] ?? '',
+            'postalcode' => preg_replace('/\D/', '', $data['cep'] ?? ''),
+            'country' => 'Brazil',
+            'format' => 'jsonv2',
+            'limit' => 1,
+        ]);
+
+        $result = $response->json()[0] ?? null;
+
+        if (! $result) {
+            $freeText = implode(', ', array_filter([
+                $data['endereco'] ?? '',
+                $data['bairro'] ?? '',
+                $data['cidade'] ?? '',
+                $data['estado'] ?? '',
+                'Brasil',
+            ]));
+
+            $fallback = $client->get('https://nominatim.openstreetmap.org/search', [
+                'q' => $freeText,
+                'format' => 'jsonv2',
+                'limit' => 1,
+                'countrycodes' => 'br',
+            ]);
+            $result = $fallback->json()[0] ?? null;
+        }
+
+        if (! $response->successful() || ! $result || ! isset($result['lat'], $result['lon'])) {
+            return response()->json(['coordinates' => null]);
+        }
+
+        return response()->json(['coordinates' => [
+            'latitude' => (float) $result['lat'],
+            'longitude' => (float) $result['lon'],
+        ]]);
     }
 
     private function toViewData(Complaint $complaint): array

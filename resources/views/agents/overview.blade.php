@@ -17,11 +17,23 @@
         ['id' => '#039', 'occurrence' => 'Acúmulo de lixo', 'location' => 'Parque St. Tereza', 'date' => '21/08/26', 'priority' => 'Média', 'status' => 'Pendente', 'statusClass' => 'bg-amber-100 text-amber-700'],
         ['id' => '#038', 'occurrence' => 'Buraco na via', 'location' => 'Cohab V', 'date' => '20/08/26', 'priority' => 'Alta', 'status' => 'Em Análise', 'statusClass' => 'bg-sky-100 text-sky-700'],
     ];
+
+    // Os valores acima preservam o protótipo visual; em produção, a tela usa o painel alimentado pelo banco.
+    $metrics = $panelMetrics ?? $metrics;
+    $complaints = collect($panelComplaints ?? [])->map(fn ($complaint) => [
+        'id' => $complaint['id'],
+        'occurrence' => $complaint['title'],
+        'location' => $complaint['location']['district'],
+        'date' => $complaint['date'],
+        'priority' => $complaint['priority'],
+        'status' => $complaint['status'],
+        'statusClass' => $complaint['status'] === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : ($complaint['status'] === 'Em análise' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'),
+    ]);
 @endphp
 
 <div class="min-h-screen bg-[#efefee] text-slate-800">
     <div class="flex min-h-screen">
-        <aside class="hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
+        <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
             <div>
                 <div class="mb-10 flex items-center gap-3 px-3">
                     <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10 shadow-sm ring-1 ring-white/20">
@@ -67,7 +79,7 @@
         </aside>
 
         <main class="flex-1 p-4 md:p-6 xl:p-8">
-            <header class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <header class="cdu-embedded-panel-header flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
                 <label class="relative block w-full max-w-xl">
                     <span class="sr-only">Buscar</span>
                     <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
@@ -210,13 +222,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        const markers = [
-            { coords: [-23.549, -46.638], color: '#ef4444', label: 'Urgente' },
-            { coords: [-23.562, -46.646], color: '#f59e0b', label: 'Pendente' },
-            { coords: [-23.540, -46.630], color: '#0ea5e9', label: 'Em Análise' },
-            { coords: [-23.535, -46.650], color: '#10b981', label: 'Resolvida' },
-            { coords: [-23.555, -46.620], color: '#f59e0b', label: 'Pendente' },
-        ];
+        const markers = @json($mapMarkers ?? []);
 
         markers.forEach((marker) => {
             const circle = L.circleMarker(marker.coords, {

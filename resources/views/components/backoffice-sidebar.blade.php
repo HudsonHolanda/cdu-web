@@ -4,14 +4,15 @@
         <span>CDU</span>
     </a>
     <nav class="cdu-sidebar-nav">
-        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}" wire:navigate><span>⌂</span> Visão Geral</a>
-        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" wire:navigate><span>▦</span> Dashboard</a>
+        <a href="{{ route('agent.overview') }}" class="{{ request()->routeIs('agent.overview') ? 'is-active' : '' }}" wire:navigate><span>⌂</span> Visão Geral</a>
+        <a href="{{ route('agent.dashboard') }}" class="{{ request()->routeIs('agent.dashboard') ? 'is-active' : '' }}" wire:navigate><span>▦</span> Dashboard</a>
         <a href="{{ route('complaints.index') }}" class="{{ request()->routeIs('complaints.index', 'complaints.create', 'complaints.store', 'complaints.show') ? 'is-active' : '' }}" wire:navigate><span>▤</span> Denúncias</a>
         <a href="{{ route('complaints.mine') }}" class="{{ request()->routeIs('complaints.mine', 'complaints.edit', 'complaints.update', 'complaints.destroy') ? 'is-active' : '' }}" wire:navigate><span>▣</span> Minhas denúncias</a>
-        @admin
+        @agent
             <a href="{{ route('agents.index') }}" class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" wire:navigate><span>♙</span> Usuários</a>
-            <a href="#" class="cdu-sidebar-disabled"><span>▥</span> Relatórios</a>
-        @endadmin
+            <a href="{{ route('agent.mapa') }}" class="{{ request()->routeIs('agent.mapa') ? 'is-active' : '' }}" wire:navigate><span>⌖</span> Mapa</a>
+            <a href="{{ route('agent.relatorios') }}" class="{{ request()->routeIs('agent.relatorios') ? 'is-active' : '' }}" wire:navigate><span>▥</span> Relatórios</a>
+        @endagent
     </nav>
     <div class="cdu-sidebar-bottom">
         <x-theme-toggle />

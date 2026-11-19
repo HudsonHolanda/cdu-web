@@ -4,12 +4,17 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     public string $name = '';
     public string $email = '';
+    public $profileImage;
 
     /**
      * Mount the component.
@@ -30,6 +35,7 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->getKey(), 'id_user')],
+            'profileImage' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $user->fill($validated);
@@ -38,7 +44,17 @@ new class extends Component
             $user->email_verified_at = null;
         }
 
+        if ($this->profileImage) {
+            if ($user->profile_image) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+
+            $user->profile_image = $this->profileImage->store('profile-images', 'public');
+        }
+
         $user->save();
+
+        $this->reset('profileImage');
 
         $this->dispatch('profile-updated', name: $user->name);
     }
@@ -74,6 +90,20 @@ new class extends Component
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+        <div>
+            <x-input-label for="profileImage" :value="__('Foto de perfil')" />
+            <div class="mt-2 flex items-center gap-4">
+                @if (auth()->user()->profile_image)
+                    <img src="{{ route('profile.image') }}" alt="Foto de perfil" class="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200">
+                @else
+                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-800 text-xl font-semibold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                @endif
+                <input wire:model="profileImage" id="profileImage" name="profileImage" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm text-gray-600 dark:text-gray-300">
+            </div>
+            <p class="mt-1 text-xs text-gray-500">JPG, PNG ou WebP, até 5 MB.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('profileImage')" />
+        </div>
+
         <div>
             <x-input-label for="name" :value="__('Name')" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />

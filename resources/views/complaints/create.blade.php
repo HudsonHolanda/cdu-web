@@ -145,20 +145,23 @@
         };
 
         const lookupCoordinates = async (addressData) => {
-            const query = [addressData.logradouro, addressData.bairro, addressData.localidade, addressData.uf, 'Brasil']
-                .filter(Boolean)
-                .join(', ');
-            const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1', countrycodes: 'br' });
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+            const params = new URLSearchParams({
+                endereco: addressInput.value || addressData.logradouro || '',
+                bairro: addressData.bairro || '',
+                cidade: addressData.localidade || '',
+                estado: addressData.uf || '',
+                cep: addressData.cep || cepInput.value,
+            });
+            const response = await fetch(`{{ route('complaints.geocode') }}?${params}`, {
                 headers: { Accept: 'application/json' },
             });
             if (!response.ok) throw new Error('Falha ao localizar o endereço');
 
-            const [result] = await response.json();
-            if (!result) return false;
+            const { coordinates } = await response.json();
+            if (!coordinates) return false;
 
-            latitudeInput.value = Number(result.lat).toFixed(6);
-            longitudeInput.value = Number(result.lon).toFixed(6);
+            latitudeInput.value = Number(coordinates.latitude).toFixed(6);
+            longitudeInput.value = Number(coordinates.longitude).toFixed(6);
             return true;
         };
 

@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 
 // `role` fica de fora do Fillable de propósito: o papel nunca pode vir de um formulário
 // (atribuição em massa permitiria um cidadão se promover a admin). Atribua com $user->role = ...
-#[Fillable(['name', 'email', 'password', 'cpf'])]
+#[Fillable(['name', 'email', 'password', 'cpf', 'profile_image'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {

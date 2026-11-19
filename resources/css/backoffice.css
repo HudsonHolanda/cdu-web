@@ -1,5 +1,7 @@
 .cdu-app-shell { background: var(--cdu-bg); color: var(--cdu-text); }
 .cdu-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 30; display: flex; width: 164px; flex-direction: column; padding: 2rem 1.35rem 1.35rem; background: var(--cdu-sidebar); color: #fff; }
+.cdu-embedded-panel-sidebar { display: none !important; }
+.cdu-embedded-panel-header { display: none !important; }
 .cdu-sidebar-brand { display: flex; flex-direction: column; align-items: center; gap: .2rem; color: #fff; font-size: 1.35rem; font-weight: 800; letter-spacing: .02em; text-decoration: none; }
 .cdu-sidebar-brand img { width: 54px; height: 54px; object-fit: contain; }
 .cdu-sidebar-nav { display: grid; gap: .3rem; margin-top: 3rem; }
@@ -17,7 +19,7 @@
 .cdu-user-chip { display: flex; align-items: center; gap: .55rem; font-size: .72rem; }
 .cdu-user-chip strong, .cdu-user-chip small { display: block; }
 .cdu-user-chip small { margin-top: .12rem; color: var(--cdu-muted); font-size: .62rem; }
-.cdu-user-avatar { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--cdu-green-soft); color: var(--cdu-green-dark); font-weight: 800; }
+.cdu-user-avatar { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--cdu-green-soft); color: var(--cdu-green-dark); font-weight: 800; object-fit: cover; }
 .cdu-backoffice-heading { padding: 1rem 3.4vw 0; }
 .cdu-backoffice-heading h2 { margin: 0; color: var(--cdu-text); font-size: 1.35rem; }
 .cdu-backoffice-heading p { margin: .25rem 0 0; color: var(--cdu-muted); font-size: .76rem; }

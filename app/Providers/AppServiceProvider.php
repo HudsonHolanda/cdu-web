@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         // Define gates para as user roles
         Gate::define('report-problems',    fn (User $u) => $u->hasRole(UserRole::CITIZEN));
         Gate::define('access-agent-panel', fn (User $u) => $u->isAgent());
+        Gate::define('access-agents',      fn (User $u) => $u->hasRole(UserRole::AGENT));
         Gate::define('manage-resolutions', fn (User $u) => $u->hasRole(UserRole::AGENT));
         Gate::define('manage-agents',      fn (User $u) => $u->hasRole(UserRole::ADMIN));
         Gate::define('moderate',           fn (User $u) => $u->hasRole(UserRole::ADMIN));

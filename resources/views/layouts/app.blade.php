@@ -39,7 +39,14 @@
                 @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT))
                     <div class="cdu-backoffice-topbar">
                         <div class="cdu-search">⌕ <span>Buscar</span></div>
-                        <div class="cdu-user-chip"><span class="cdu-user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span><span><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->isAdmin() ? 'Administrador' : 'Agente' }}</small></span></div>
+                        <div class="cdu-user-chip">
+                            @if (auth()->user()->profile_image)
+                                <img class="cdu-user-avatar" src="{{ route('profile.image') }}" alt="Foto de {{ auth()->user()->name }}">
+                            @else
+                                <span class="cdu-user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                            @endif
+                            <span><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->isAdmin() ? 'Administrador' : 'Agente' }}</small></span>
+                        </div>
                     </div>
                     @if (isset($header))
                         <div class="cdu-backoffice-heading">{{ $header }}</div>

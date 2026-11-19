@@ -67,11 +67,13 @@
                 'date' => '18/08/2026',
             ],
         ];
+
+        $complaints = $mapComplaints ?? $complaints;
     @endphp
 
     <div class="min-h-screen bg-[#efefee] text-slate-800">
         <div class="flex min-h-screen">
-            <aside class="hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
+            <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
                 <div>
                     <div class="mb-10 flex items-center gap-3 px-3">
                         <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10 shadow-sm ring-1 ring-white/20">
@@ -117,7 +119,7 @@
             </aside>
 
             <main class="flex-1 p-4 md:p-6 xl:p-8">
-                <header class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+                <header class="cdu-embedded-panel-header flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold tracking-tight text-slate-900">Mapa de Ocorrências</h1>
                     </div>

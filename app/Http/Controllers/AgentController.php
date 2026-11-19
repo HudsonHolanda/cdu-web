@@ -12,7 +12,7 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 /**
- * CRUD de agentes (usuários com role = AGENT). Só o admin acessa (Gate "manage-agents", ver routes/web.php).
+ * Cadastro e consulta de agentes. Agentes podem consultar/cadastrar; apenas admins editam/removem.
  * Usa o model User: a senha sai criptografada (cast "hashed") e o login é o mesmo do resto do sistema.
  */
 class AgentController extends Controller
@@ -45,6 +45,7 @@ class AgentController extends Controller
 
     public function edit(User $agent): View
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
         $this->ensureAgent($agent);
 
         return view()->file(resource_path('agent/edit.blade.php'), ['agent' => $agent]);
@@ -52,6 +53,7 @@ class AgentController extends Controller
 
     public function update(Request $request, User $agent): RedirectResponse
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
         $this->ensureAgent($agent);
 
         $request->merge(['cpf' => Cpf::digits($request->input('cpf'))]);
@@ -82,6 +84,7 @@ class AgentController extends Controller
 
     public function destroy(User $agent): RedirectResponse
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
         $this->ensureAgent($agent);
 
         $agent->delete();

@@ -17,11 +17,26 @@
             ['id' => '#039', 'occurrence' => 'Acúmulo de lixo', 'location' => 'Parque St. Tereza', 'date' => '21/08/26', 'priority' => 'Média', 'status' => 'Pendente'],
             ['id' => '#038', 'occurrence' => 'Buraco na via', 'location' => 'Cohab V', 'date' => '20/08/26', 'priority' => 'Alta', 'status' => 'Em análise'],
         ];
+
+        $metrics = collect($panelMetrics ?? $metrics)->map(fn ($metric) => [
+            ...$metric,
+            'value' => number_format((int) $metric['value'], 0, ',', '.'),
+            'delta' => '',
+            'tone' => 'bg-slate-100 text-slate-700',
+        ])->all();
+        $recentComplaints = collect($panelComplaints ?? $recentComplaints)->map(fn ($complaint) => [
+            'id' => $complaint['id'],
+            'occurrence' => $complaint['title'],
+            'location' => $complaint['location']['district'],
+            'date' => $complaint['date'],
+            'priority' => $complaint['priority'],
+            'status' => $complaint['status'],
+        ])->all();
     @endphp
 
     <div class="min-h-screen bg-[#efefee] text-slate-800">
         <div class="flex min-h-screen">
-            <aside class="hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
+            <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
                 <div>
                     <div class="mb-10 flex items-center gap-3 px-3">
                         <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10 shadow-sm ring-1 ring-white/20">
@@ -67,7 +82,7 @@
             </aside>
 
             <main class="flex-1 p-4 md:p-6 xl:p-8">
-                <header class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+                <header class="cdu-embedded-panel-header flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] px-4 py-4 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between">
                     <div class="relative block w-full max-w-xl">
                         <span class="sr-only">Buscar</span>
                         <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
@@ -144,18 +159,16 @@
                             <div class="relative mx-auto h-52 w-52 rounded-full bg-[conic-gradient(#0f766e_0_34%,#f59e0b_34%_55%,#d946ef_55%_73%,#3b82f6_73%_88%,#94a3b8_88%_100%)] p-5">
                                 <div class="flex h-full w-full items-center justify-center rounded-full bg-white text-center shadow-inner">
                                     <div>
-                                        <div class="text-4xl font-black text-slate-900">1.248</div>
+                                        <div class="text-4xl font-black text-slate-900">{{ number_format($totalComplaints ?? 0, 0, ',', '.') }}</div>
                                         <div class="text-sm text-slate-500">Total</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="w-full space-y-3 text-sm text-slate-700">
-                                <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#0f766e]"></span>Buraco na via</span><span>428 (34%)</span></div>
-                                <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#f59e0b]"></span>Iluminação pública</span><span>312 (25%)</span></div>
-                                <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#d946ef]"></span>Acúmulo de lixo</span><span>186 (15%)</span></div>
-                                <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#3b82f6]"></span>Vazamento de água</span><span>132 (11%)</span></div>
-                                <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#94a3b8]"></span>Outros</span><span>92 (7%)</span></div>
+                                @foreach (($categoryCounts ?? collect())->take(5) as $category => $count)
+                                    <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#0f766e]"></span>{{ $category ?: 'Sem categoria' }}</span><span>{{ $count }} ({{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%)</span></div>
+                                @endforeach
                             </div>
                         </div>
                     </article>
@@ -186,30 +199,12 @@
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h2 class="mb-5 text-xl font-semibold text-slate-900">Denúncias por status</h2>
                         <div class="space-y-4 text-sm">
-                            <div>
-                                <div class="mb-1 flex justify-between"><span>Pendentes</span><span class="font-semibold">312 (25%)</span></div>
-                                <div class="h-2.5 rounded-full bg-slate-100">
-                                    <div class="h-full w-[25%] rounded-full bg-orange-400"></div>
+                            @foreach (($statusCounts ?? collect())->take(5) as $status => $count)
+                                <div>
+                                    <div class="mb-1 flex justify-between"><span>{{ $status }}</span><span class="font-semibold">{{ $count }} ({{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%)</span></div>
+                                    <div class="h-2.5 rounded-full bg-slate-100"><div class="h-full rounded-full bg-emerald-500" style="width: {{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%"></div></div>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="mb-1 flex justify-between"><span>Em análise</span><span class="font-semibold">478 (38%)</span></div>
-                                <div class="h-2.5 rounded-full bg-slate-100">
-                                    <div class="h-full w-[38%] rounded-full bg-blue-400"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-1 flex justify-between"><span>Em atendimento</span><span class="font-semibold">198 (16%)</span></div>
-                                <div class="h-2.5 rounded-full bg-slate-100">
-                                    <div class="h-full w-[16%] rounded-full bg-violet-400"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-1 flex justify-between"><span>Resolvidas</span><span class="font-semibold">458 (37%)</span></div>
-                                <div class="h-2.5 rounded-full bg-slate-100">
-                                    <div class="h-full w-[37%] rounded-full bg-emerald-500"></div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </article>
 
@@ -223,21 +218,18 @@
                             </div>
                         </div>
                         <div class="mt-5 space-y-3 text-sm text-slate-700">
-                            <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-500"></span>Centro</span><span>342</span></div>
-                            <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>Zona Norte</span><span>284</span></div>
-                            <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-300"></span>Zona Sul</span><span>256</span></div>
-                            <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-200"></span>Zona Leste</span><span>198</span></div>
+                            @foreach (($districtCounts ?? collect())->take(4) as $district => $count)
+                                <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>{{ $district }}</span><span>{{ $count }}</span></div>
+                            @endforeach
                         </div>
                     </article>
 
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h2 class="mb-5 text-xl font-semibold text-slate-900">Top 5 bairros</h2>
                         <div class="space-y-4 text-sm">
-                            <div class="flex items-center justify-between"><span>1. Centro</span><span>186</span></div>
-                            <div class="flex items-center justify-between"><span>2. Jardim Maria Beatriz</span><span>142</span></div>
-                            <div class="flex items-center justify-between"><span>3. Vila Dirce</span><span>118</span></div>
-                            <div class="flex items-center justify-between"><span>4. Cohab V</span><span>96</span></div>
-                            <div class="flex items-center justify-between"><span>5. Parque Santa Tereza</span><span>88</span></div>
+                            @foreach (($districtCounts ?? collect())->take(5) as $district => $count)
+                                <div class="flex items-center justify-between"><span>{{ $loop->iteration }}. {{ $district }}</span><span>{{ $count }}</span></div>
+                            @endforeach
                         </div>
                     </article>
                 </section>

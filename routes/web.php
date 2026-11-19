@@ -4,26 +4,28 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\BackofficeController;
+use Illuminate\Support\Facades\Storage;
 
 Route::view('/', 'home');
 
 Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeController $backoffice) {
     return $request->user()->hasRole(\App\Enums\UserRole::AGENT)
-        ? $backoffice->home()
+        ? $backoffice->agentOverview()
         : view('dashboard');
 })
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::get('dashboard/analytics', [BackofficeController::class, 'dashboard'])
+Route::get('dashboard/analytics', [BackofficeController::class, 'agentDashboard'])
     ->middleware(['auth', 'verified', 'role:agent'])
     ->name('admin.dashboard');
     
 Route::middleware(['auth', 'verified', 'can:access-agent-panel'])->group(function () {
-    Route::view('painel', 'agents.overview')->name('agent.overview');
-    Route::view('painel/dashboard', 'agents.dashboard')->name('agent.dashboard');
-    Route::view('painel/mapa', 'agents.mapa')->name('agent.mapa');
-    Route::view('painel/relatorios', 'agents.relatorios')->name('agent.relatorios');
+    Route::get('painel', [BackofficeController::class, 'agentOverview'])->name('agent.overview');
+    Route::get('painel/dashboard', [BackofficeController::class, 'agentDashboard'])->name('agent.dashboard');
+    Route::get('painel/mapa', [BackofficeController::class, 'agentMap'])->name('agent.mapa');
+    Route::get('painel/relatorios', [BackofficeController::class, 'agentReports'])->name('agent.relatorios');
+    Route::get('painel/relatorios/pdf', [BackofficeController::class, 'agentReportPdf'])->name('agent.relatorios.pdf');
 });
 
 Route::middleware(['auth'])->prefix('denuncias')->name('complaints.')->group(function () {
@@ -43,10 +45,21 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::get('profile/image', function (\Illuminate\Http\Request $request) {
+    $path = $request->user()?->profile_image;
+    abort_unless($path && Storage::disk('public')->exists($path), 404);
+
+    return Storage::disk('public')->response($path);
+})->middleware(['auth'])->name('profile.image');
+
+Route::get('denuncias/geocode', [ComplaintController::class, 'geocode'])
+    ->middleware(['auth'])
+    ->name('complaints.geocode');
+
 
 
     // Gestão de agentes: apenas administradores (Gate "manage-agents")
-Route::middleware(['auth', 'verified', 'can:manage-agents'])
+Route::middleware(['auth', 'verified', 'can:access-agents'])
     ->prefix('agents')
     ->name('agents.')
     ->group(function () {
