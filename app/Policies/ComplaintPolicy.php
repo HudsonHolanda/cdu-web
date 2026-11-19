@@ -16,7 +16,7 @@ class ComplaintPolicy
 
     public function update(User $user, Complaint $complaint): bool
     {
-        return $user->isAdmin()
+        return $user->hasRole(UserRole::AGENT)
             || ((int) $complaint->id_user === (int) $user->id_user
                 && $complaint->status === ComplaintStatus::PENDING);
     }

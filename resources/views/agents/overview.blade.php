@@ -10,6 +10,28 @@
         ['label' => 'Urgentes', 'value' => '7', 'tone' => 'bg-white text-slate-900', 'icon' => 'alert', 'accent' => 'text-rose-500'],
     ];
 
+    $overviewComplaints = collect($complaints ?? [])->map(function ($complaint) {
+        $status = $complaint['status'] ?? 'Pendente';
+        $priority = $complaint['priority'] ?? 'Normal';
+
+        $statusFilter = match ($status) {
+            'Em análise' => 'analysis',
+            'Concluído' => 'resolved',
+            default => 'pending',
+        };
+
+        return [
+            'id' => $complaint['id'],
+            'occurrence' => $complaint['title'],
+            'location' => $complaint['location']['district'] ?? 'Não informado',
+            'date' => $complaint['date'],
+            'priority' => $priority,
+            'status' => $status,
+            'filter' => $statusFilter,
+            'filters' => array_values(array_filter([$statusFilter, $priority === 'Urgente' ? 'urgent' : null])),
+        ];
+    })->values();
+
     $complaints = [
         ['id' => '#042', 'occurrence' => 'Buraco na via', 'location' => 'Centro', 'date' => '23/08/26', 'priority' => 'Alta', 'status' => 'Pendente', 'statusClass' => 'bg-amber-100 text-amber-700'],
         ['id' => '#041', 'occurrence' => 'Poste queimado', 'location' => 'Jd. Itália', 'date' => '23/08/26', 'priority' => 'Média', 'status' => 'Em Análise', 'statusClass' => 'bg-sky-100 text-sky-700'],
@@ -134,11 +156,11 @@
                                         @break
                                 @endswitch
                             </div>
-                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                            <button type="button" class="overview-filter-trigger flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200" data-overview-filter="{{ $metric['filter'] ?? '' }}" aria-label="Filtrar denúncias: {{ $metric['label'] }}" aria-expanded="false">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                            </div>
+                            </button>
                         </div>
                         <div class="mt-6">
                             <div class="text-4xl font-black tracking-tight text-slate-900">{{ $metric['value'] }}</div>
@@ -148,13 +170,15 @@
                 @endforeach
             </section>
 
+            <script type="application/json" id="overview-complaints-data">@json($overviewComplaints)</script>
+
             <section class="mt-8 grid gap-6 xl:grid-cols-[1.8fr_1fr]">
-                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" data-overview-results-panel>
                     <div class="mb-4 flex items-center justify-between gap-3">
-                        <h2 class="text-xl font-semibold text-slate-900">Ocorrências Recentes</h2>
+                        <h2 class="text-xl font-semibold text-slate-900" data-overview-filter-title>Ocorrências Recentes</h2>
                         <div class="flex gap-2">
-                            <button class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">Ver Todas</button>
-                            <button class="rounded-lg border border-slate-200 bg-slate-900 px-3 py-2 text-sm font-medium text-white">Abrir Mapa</button>
+                            <button type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-overview-filter="all">Ver Todas</button>
+                            <button type="button" class="rounded-lg border border-slate-200 bg-slate-900 px-3 py-2 text-sm font-medium text-white" data-overview-map-open>Abrir Mapa</button>
                         </div>
                     </div>
 
@@ -170,7 +194,7 @@
                                     <th class="px-3 py-3 font-medium">Status</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody data-overview-filter-rows>
                                 @foreach ($complaints as $complaint)
                                     <tr class="border-b border-slate-100 last:border-b-0">
                                         <td class="px-3 py-3 font-medium text-slate-500">{{ $complaint['id'] }}</td>
@@ -191,6 +215,7 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <p class="hidden py-8 text-center text-sm text-slate-500" data-overview-filter-empty>Nenhuma denúncia encontrada para este filtro.</p>
                     </div>
                 </div>
 
@@ -211,29 +236,83 @@
     </div>
 </div>
 
+<div id="overview-map-modal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="overview-map-modal-title">
+    <div class="flex h-full w-full items-center justify-center" data-overview-map-backdrop>
+        <div class="w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3 sm:px-6">
+                <div>
+                    <h2 id="overview-map-modal-title" class="text-lg font-semibold text-slate-900">Mapa de Ocorrências</h2>
+                    <p class="text-sm text-slate-500">Visualização ampliada das denúncias cadastradas</p>
+                </div>
+                <button type="button" class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200" data-overview-map-close aria-label="Fechar mapa">&times;</button>
+            </div>
+            <div id="overview-modal-map" class="h-[70vh] min-h-[360px] w-full"></div>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const map = L.map('complaints-map').setView([-23.5489, -46.6388], 12);
+        if (!window.L) return;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const markers = @json($mapMarkers ?? []);
+        const addMarkers = (map, radius = 10) => {
+            markers.forEach((marker) => {
+                const circle = L.circleMarker(marker.coords, {
+                    radius,
+                    color: marker.color,
+                    fillColor: marker.color,
+                    fillOpacity: 0.9,
+                    weight: 2,
+                }).addTo(map);
+
+                circle.bindPopup(`<strong>${marker.label}</strong>`);
+            });
+        };
+
+        const addTiles = (map) => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        const markers = @json($mapMarkers ?? []);
+        const pageMap = L.map('complaints-map').setView([-23.5489, -46.6388], 12);
+        addTiles(pageMap);
+        addMarkers(pageMap);
 
-        markers.forEach((marker) => {
-            const circle = L.circleMarker(marker.coords, {
-                radius: 10,
-                color: marker.color,
-                fillColor: marker.color,
-                fillOpacity: 0.9,
-                weight: 2,
-            }).addTo(map);
+        const modal = document.getElementById('overview-map-modal');
+        const modalMapContainer = document.getElementById('overview-modal-map');
+        const openButton = document.querySelector('[data-overview-map-open]');
+        const closeButton = document.querySelector('[data-overview-map-close]');
+        const backdrop = document.querySelector('[data-overview-map-backdrop]');
+        let modalMap;
 
-            circle.bindPopup(`<strong>${marker.label}</strong>`);
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        };
+
+        const openModal = () => {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+
+            if (!modalMap) {
+                modalMap = L.map(modalMapContainer).setView([-23.5489, -46.6388], 12);
+                addTiles(modalMap);
+                addMarkers(modalMap, 12);
+            }
+
+            window.setTimeout(() => modalMap.invalidateSize(), 50);
+        };
+
+        openButton?.addEventListener('click', openModal);
+        closeButton?.addEventListener('click', closeModal);
+        backdrop?.addEventListener('click', (event) => {
+            if (event.target === backdrop) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
         });
     });
 </script>

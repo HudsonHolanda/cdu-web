@@ -41,9 +41,9 @@
                         <div class="cdu-search">⌕ <span>Buscar</span></div>
                         <div class="cdu-user-chip">
                             @if (auth()->user()->profile_image)
-                                <img class="cdu-user-avatar" src="{{ route('profile.image') }}" alt="Foto de {{ auth()->user()->name }}">
+                                <img data-profile-avatar data-image-url="{{ route('profile.image') }}" class="cdu-user-avatar" src="{{ route('profile.image', ['v' => auth()->user()->updated_at?->timestamp ?? time()]) }}" alt="Foto de {{ auth()->user()->name }}">
                             @else
-                                <span class="cdu-user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                                <span data-profile-avatar data-image-url="{{ route('profile.image') }}" data-avatar-class="cdu-user-avatar" class="cdu-user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                             @endif
                             <span><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->isAdmin() ? 'Administrador' : 'Agente' }}</small></span>
                         </div>

@@ -2,15 +2,16 @@
     @php
         $location = $complaint['location'];
         $remainingPhotos = max(0, 5 - count($complaint['attachments']));
+        $isBackofficeEditor = auth()->user()?->hasRole(\App\Enums\UserRole::AGENT);
     @endphp
 
     <div class="complaints-page complaint-create-page">
-        <a class="complaint-back-link" href="{{ route('complaints.mine') }}"><span aria-hidden="true">←</span> Voltar para minhas denúncias</a>
+        <a class="complaint-back-link" href="{{ route($isBackofficeEditor ? 'complaints.index' : 'complaints.mine') }}"><span aria-hidden="true">←</span> Voltar para {{ $isBackofficeEditor ? 'denúncias' : 'minhas denúncias' }}</a>
 
         <div class="complaint-create-heading">
-            <p class="complaints-eyebrow">Relato pendente</p>
-            <h1>Editar denúncia</h1>
-            <p class="complaints-lead">Atualize as informações enquanto o relato ainda está pendente.</p>
+            <p class="complaints-eyebrow">{{ $isBackofficeEditor ? 'Gestão de denúncias' : 'Relato pendente' }}</p>
+            <h1>{{ $isBackofficeEditor ? 'Atualizar denúncia' : 'Editar denúncia' }}</h1>
+            <p class="complaints-lead">{{ $isBackofficeEditor ? 'Atualize as informações do relato para manter o atendimento correto.' : 'Atualize as informações enquanto o relato ainda está pendente.' }}</p>
         </div>
 
         @if ($errors->any())

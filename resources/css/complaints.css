@@ -98,8 +98,8 @@
 .complaint-description-panel > p:last-child { margin: .8rem 0 0; color: #d0d8d2; font-size: .96rem; line-height: 1.75; white-space: pre-line; }
 .complaint-location-panel address { margin: .85rem 0 1rem; color: #b0bcb5; font-size: .9rem; font-style: normal; line-height: 1.7; }
 .complaint-location-panel address strong { color: var(--complaints-ink); }
-.complaint-map-card { overflow: hidden; min-width: 0; border: 1px solid var(--complaints-line); border-radius: .75rem; background: var(--complaints-input); }
-.complaint-map-embed { display: block; width: 100%; height: 220px; border: 0; }
+.complaint-map-card { position: relative; z-index: 0; overflow: hidden; min-width: 0; border: 1px solid var(--complaints-line); border-radius: .75rem; background: var(--complaints-input); isolation: isolate; }
+.complaint-map-embed { position: relative; z-index: 0; display: block; width: 100%; height: 220px; border: 0; }
 .complaint-map-footer { display: flex; align-items: center; gap: .8rem; padding: .85rem; }
 .complaint-map-footer > div { display: grid; min-width: 0; gap: .2rem; }
 .complaint-map-footer strong { font-size: .85rem; }

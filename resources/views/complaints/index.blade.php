@@ -57,14 +57,16 @@
                             </div>
                             <div class="complaint-card-footer">
                                 <span>Publicada em {{ \Illuminate\Support\Carbon::parse($complaint['createdAt'])->format('d/m/Y') }}</span>
-                                @if (($myComplaints ?? false) && $complaint['status'] === 'Pendente')
+                                @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) || (($myComplaints ?? false) && $complaint['status'] === 'Pendente'))
                                     <div class="complaint-card-actions">
-                                        <a class="complaint-action-link" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">Editar</a>
+                                        <a class="complaint-action-link" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">{{ auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) ? 'Atualizar' : 'Editar' }}</a>
+                                        @if (($myComplaints ?? false))
                                         <form method="POST" action="{{ route('complaints.destroy', ['complaint' => $complaint['complaintId']]) }}" onsubmit="return confirm('Excluir este relato? Esta ação não pode ser desfeita.')">
                                             @csrf
                                             @method('DELETE')
                                             <button class="complaint-action-link complaint-action-delete" type="submit">Excluir</button>
                                         </form>
+                                        @endif
                                     </div>
                                 @endif
                             </div>

@@ -18,6 +18,9 @@
             ['id' => '#038', 'occurrence' => 'Buraco na via', 'location' => 'Cohab V', 'date' => '20/08/26', 'priority' => 'Alta', 'status' => 'Em análise'],
         ];
 
+        $dashboardComplaints = collect($complaints ?? [])->values();
+        $dashboardBaseFilters = collect($dashboardFilters ?? [])->except('status')->all();
+
         $metrics = collect($panelMetrics ?? $metrics)->map(fn ($metric) => [
             ...$metric,
             'value' => number_format((int) $metric['value'], 0, ',', '.'),
@@ -32,6 +35,18 @@
             'priority' => $complaint['priority'],
             'status' => $complaint['status'],
         ])->all();
+
+        $categoryColors = ['#0f766e', '#f59e0b', '#d946ef', '#3b82f6', '#94a3b8'];
+        $categoryGradientStops = [];
+        $categoryOffset = 0;
+        $categoryTotal = max(1, (int) ($totalComplaints ?? 0));
+        foreach (collect($categoryCounts ?? [])->take(5) as $index => $categoryCount) {
+            $nextOffset = $categoryOffset + (($categoryCount / $categoryTotal) * 100);
+            $color = $categoryColors[count($categoryGradientStops) % count($categoryColors)];
+            $categoryGradientStops[] = "{$color} {$categoryOffset}% {$nextOffset}%";
+            $categoryOffset = $nextOffset;
+        }
+        $categoryGradient = $categoryGradientStops ? implode(', ', $categoryGradientStops) : '#e2e8f0 0 100%';
     @endphp
 
     <div class="min-h-screen bg-[#efefee] text-slate-800">
@@ -111,13 +126,28 @@
                             <p class="mt-2 text-base text-slate-600">Visão geral das ocorrências registradas na cidade.</p>
                         </div>
 
-                        <div class="flex gap-3">
-                            <div class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                                <span>📅</span>
-                                01/08/2026 - 24/08/2026
-                            </div>
-                            <button class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-medium text-white">Exportar relatório</button>
-                        </div>
+                        <form method="GET" action="{{ route('agent.dashboard') }}" class="flex flex-wrap items-end justify-end gap-3">
+                            <label class="text-xs font-medium text-slate-600">
+                                <span class="mb-1 block">Data inicial</span>
+                                <input type="date" name="start_date" value="{{ $dashboardFilters['start_date'] ?? '' }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
+                            </label>
+                            <label class="text-xs font-medium text-slate-600">
+                                <span class="mb-1 block">Data final</span>
+                                <input type="date" name="end_date" value="{{ $dashboardFilters['end_date'] ?? '' }}" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
+                            </label>
+                            <label class="text-xs font-medium text-slate-600">
+                                <span class="mb-1 block">Categoria</span>
+                                <select name="category" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
+                                    <option value="">Todas as categorias</option>
+                                    @foreach (($dashboardCategories ?? collect()) as $category)
+                                        <option value="{{ $category }}" @selected(($dashboardFilters['category'] ?? '') === $category)>{{ $category }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <button type="submit" class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-medium text-white">Filtrar</button>
+                            <a href="{{ route('agent.dashboard') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">Limpar</a>
+                            <a href="{{ route('agent.dashboard.pdf', $dashboardFilters ?? []) }}" class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-medium text-white">Exportar relatório</a>
+                        </form>
                     </div>
                 </section>
 
@@ -128,20 +158,44 @@
                                 <div class="flex h-10 w-10 items-center justify-center rounded-xl {{ $metric['tone'] }}">
                                     @switch($metric['icon'])
                                         @case('clipboard')
-                                            <span>▣</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5h6m-7 3h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Zm2-3h2a2 2 0 0 1 2 2v1h-6V7a2 2 0 0 1 2-2Z"/>
+                                            </svg>
+                                            @break
+                                        @case('folder')
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z"/>
+                                            </svg>
+                                            @break
+                                        @case('alert')
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                                            </svg>
                                             @break
                                         @case('clock')
-                                            <span>◔</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="8.5"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5v5l3 1.75"/>
+                                            </svg>
                                             @break
                                         @case('search')
-                                            <span>⌕</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <circle cx="10.8" cy="10.8" r="5.8"/>
+                                                <path stroke-linecap="round" d="m15.2 15.2 4 4"/>
+                                            </svg>
                                             @break
                                         @case('check')
-                                            <span>✓</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.2 4.2L19 7"/>
+                                            </svg>
                                             @break
                                     @endswitch
                                 </div>
-                                <span class="text-xs font-medium text-emerald-600">{{ $metric['delta'] }}</span>
+                                <a href="{{ route('agent.dashboard', [...$dashboardBaseFilters, 'status' => $metric['filter'] ?? '']) }}" class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200" data-dashboard-filter="{{ $metric['filter'] ?? '' }}" aria-label="Filtrar denúncias: {{ $metric['label'] }}" aria-expanded="{{ ($dashboardFilters['status'] ?? '') === ($metric['filter'] ?? '') ? 'true' : 'false' }}">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/>
+                                    </svg>
+                                </a>
                             </div>
                             <div class="mt-5 text-3xl font-black text-slate-900">{{ $metric['value'] }}</div>
                             <div class="mt-1 text-sm text-slate-600">{{ $metric['label'] }}</div>
@@ -156,7 +210,7 @@
                         </div>
 
                         <div class="flex flex-col gap-5 lg:flex-row lg:items-center">
-                            <div class="relative mx-auto h-52 w-52 rounded-full bg-[conic-gradient(#0f766e_0_34%,#f59e0b_34%_55%,#d946ef_55%_73%,#3b82f6_73%_88%,#94a3b8_88%_100%)] p-5">
+                            <div class="relative mx-auto h-52 w-52 rounded-full p-5" style="background: conic-gradient({{ $categoryGradient }})">
                                 <div class="flex h-full w-full items-center justify-center rounded-full bg-white text-center shadow-inner">
                                     <div>
                                         <div class="text-4xl font-black text-slate-900">{{ number_format($totalComplaints ?? 0, 0, ',', '.') }}</div>
@@ -167,7 +221,7 @@
 
                             <div class="w-full space-y-3 text-sm text-slate-700">
                                 @foreach (($categoryCounts ?? collect())->take(5) as $category => $count)
-                                    <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#0f766e]"></span>{{ $category ?: 'Sem categoria' }}</span><span>{{ $count }} ({{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%)</span></div>
+                                    <div class="flex items-center justify-between gap-3"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background-color: {{ $categoryColors[$loop->index % count($categoryColors)] }}"></span>{{ $category ?: 'Sem categoria' }}</span><span>{{ $count }} ({{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%)</span></div>
                                 @endforeach
                             </div>
                         </div>
@@ -181,17 +235,72 @@
                             </select>
                         </div>
 
-                        <svg viewBox="0 0 600 220" class="h-52 w-full" preserveAspectRatio="none">
-                            <path d="M0,170 L60,150 L120,160 L180,120 L240,130 L300,90 L360,100 L420,40 L480,75 L540,50 L600,60" fill="none" stroke="#1f2937" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                            <g fill="#1f2937" font-size="10" font-family="sans-serif">
-                                <text x="0" y="210">01/08</text>
-                                <text x="100" y="210">06/08</text>
-                                <text x="200" y="210">11/08</text>
-                                <text x="300" y="210">16/08</text>
-                                <text x="400" y="210">21/08</text>
-                                <text x="500" y="210">24/08</text>
-                            </g>
-                        </svg>
+                        @php
+                            $dailyStatusCounts = collect($dailyStatusCounts ?? []);
+                            $trendDates = $dailyStatusCounts->keys()->values();
+                            $trendData = $dailyStatusCounts->all();
+                            $trendSeries = [
+                                'urgent' => ['label' => 'Urgente', 'color' => '#ef4444'],
+                                'pending' => ['label' => 'Pendente', 'color' => '#fbbf24'],
+                                'analysis' => ['label' => 'Em Análise', 'color' => '#0ea5e9'],
+                                'resolved' => ['label' => 'Resolvida', 'color' => '#10b981'],
+                            ];
+                            $trendMax = max(1, (int) $dailyStatusCounts->flatMap(fn ($counts) => array_values($counts))->max());
+                            $chartWidth = 720;
+                            $chartHeight = 240;
+                            $chartLeft = 38;
+                            $chartRight = 12;
+                            $chartTop = 18;
+                            $chartBottom = 34;
+                            $plotWidth = $chartWidth - $chartLeft - $chartRight;
+                            $plotHeight = $chartHeight - $chartTop - $chartBottom;
+                        @endphp
+                        @if ($trendDates->isNotEmpty())
+                            <div class="overflow-x-auto">
+                                <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="h-56 min-w-[560px] w-full" role="img" aria-label="Evolução das denúncias por status">
+                                    @for ($grid = 0; $grid <= 4; $grid++)
+                                        @php $gridY = $chartTop + (($plotHeight / 4) * $grid); @endphp
+                                        <line x1="{{ $chartLeft }}" y1="{{ $gridY }}" x2="{{ $chartWidth - $chartRight }}" y2="{{ $gridY }}" stroke="#e2e8f0" stroke-width="1" />
+                                        <text x="{{ $chartLeft - 8 }}" y="{{ $gridY + 4 }}" text-anchor="end" fill="#64748b" font-size="11">{{ round($trendMax - (($trendMax / 4) * $grid)) }}</text>
+                                    @endfor
+
+                                    @foreach ($trendSeries as $seriesKey => $series)
+                                        @php
+                                            $seriesPoints = [];
+                                            foreach ($trendDates as $dateIndex => $date) {
+                                                $x = $trendDates->count() === 1 ? $chartLeft + ($plotWidth / 2) : $chartLeft + (($plotWidth / ($trendDates->count() - 1)) * $dateIndex);
+                                                $value = $trendData[$date][$seriesKey] ?? 0;
+                                                $y = $chartTop + $plotHeight - (($value / $trendMax) * $plotHeight);
+                                                $seriesPoints[] = round($x, 2).','.round($y, 2);
+                                            }
+                                        @endphp
+                                        <polyline points="{{ implode(' ', $seriesPoints) }}" fill="none" stroke="{{ $series['color'] }}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                                        @foreach ($trendDates as $dateIndex => $date)
+                                            @php
+                                                $x = $trendDates->count() === 1 ? $chartLeft + ($plotWidth / 2) : $chartLeft + (($plotWidth / ($trendDates->count() - 1)) * $dateIndex);
+                                                $value = $trendData[$date][$seriesKey] ?? 0;
+                                                $y = $chartTop + $plotHeight - (($value / $trendMax) * $plotHeight);
+                                            @endphp
+                                            <circle cx="{{ $x }}" cy="{{ $y }}" r="4.5" fill="white" stroke="{{ $series['color'] }}" stroke-width="3">
+                                                <title>{{ $series['label'] }}: {{ $value }} em {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</title>
+                                            </circle>
+                                        @endforeach
+                                    @endforeach
+
+                                    @foreach ($trendDates as $dateIndex => $date)
+                                        @php $x = $trendDates->count() === 1 ? $chartLeft + ($plotWidth / 2) : $chartLeft + (($plotWidth / ($trendDates->count() - 1)) * $dateIndex); @endphp
+                                        <text x="{{ $x }}" y="{{ $chartHeight - 8 }}" text-anchor="middle" fill="#64748b" font-size="11">{{ \Illuminate\Support\Carbon::parse($date)->format('d/m') }}</text>
+                                    @endforeach
+                                </svg>
+                            </div>
+                            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600">
+                                @foreach ($trendSeries as $series)
+                                    <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background-color: {{ $series['color'] }}"></span>{{ $series['label'] }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="flex h-56 items-center justify-center rounded-xl bg-slate-50 text-sm text-slate-500">Nenhuma denúncia no período selecionado.</div>
+                        @endif
                     </article>
                 </section>
 
@@ -200,9 +309,17 @@
                         <h2 class="mb-5 text-xl font-semibold text-slate-900">Denúncias por status</h2>
                         <div class="space-y-4 text-sm">
                             @foreach (($statusCounts ?? collect())->take(5) as $status => $count)
+                                @php
+                                    $statusChartColor = match ($status) {
+                                        'Pendente' => '#fbbf24',
+                                        'Em análise' => '#0ea5e9',
+                                        'Concluído' => '#10b981',
+                                        default => '#ef4444',
+                                    };
+                                @endphp
                                 <div>
                                     <div class="mb-1 flex justify-between"><span>{{ $status }}</span><span class="font-semibold">{{ $count }} ({{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%)</span></div>
-                                    <div class="h-2.5 rounded-full bg-slate-100"><div class="h-full rounded-full bg-emerald-500" style="width: {{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%"></div></div>
+                                    <div class="h-2.5 rounded-full bg-slate-100"><div class="h-full rounded-full" style="width: {{ $totalComplaints ? round($count / $totalComplaints * 100) : 0 }}%; background-color: {{ $statusChartColor }}"></div></div>
                                 </div>
                             @endforeach
                         </div>
@@ -210,17 +327,41 @@
 
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h2 class="mb-5 text-xl font-semibold text-slate-900">Denúncias por região</h2>
-                        <div class="flex items-center justify-center pt-5">
-                            <div class="relative h-32 w-44">
-                                <div class="absolute left-3 top-7 h-24 w-24 rounded-full bg-emerald-200/70 blur-sm"></div>
-                                <div class="absolute left-10 top-0 h-16 w-16 rounded-full bg-emerald-300/80"></div>
-                                <div class="absolute right-2 top-8 h-20 w-20 rounded-full bg-emerald-100/80"></div>
-                            </div>
+                        @php
+                            $regionCounts = collect($districtCounts ?? [])->take(4);
+                            $regionBubbles = $regionCounts->values();
+                            $regionMax = max(1, (int) $regionBubbles->max());
+                            $regionBubblePositions = [
+                                ['left' => '12px', 'top' => '28px'],
+                                ['left' => '48px', 'top' => '0'],
+                                ['left' => '100px', 'top' => '36px'],
+                                ['left' => '58px', 'top' => '58px'],
+                            ];
+                            $regionBubbleColors = ['bg-emerald-200/70', 'bg-emerald-300/80', 'bg-emerald-100/80', 'bg-teal-200/70'];
+                        @endphp
+                        <div class="flex min-h-40 items-center justify-center pt-5">
+                            @if ($regionCounts->isNotEmpty())
+                                <div class="relative h-32 w-44">
+                                    @foreach ($regionBubbles as $index => $count)
+                                        @php
+                                            $bubbleSize = 48 + (int) round(($count / $regionMax) * 48);
+                                            $bubblePosition = $regionBubblePositions[$index] ?? ['left' => '48px', 'top' => '28px'];
+                                        @endphp
+                                        <div class="absolute flex items-center justify-center rounded-full {{ $regionBubbleColors[$index % count($regionBubbleColors)] }} text-xs font-semibold text-emerald-900/70 shadow-sm" style="left: {{ $bubblePosition['left'] }}; top: {{ $bubblePosition['top'] }}; width: {{ $bubbleSize }}px; height: {{ $bubbleSize }}px;" title="{{ $count }} denúncia(s)">
+                                            {{ $count }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-sm text-slate-500">Nenhuma denúncia por região no filtro selecionado.</p>
+                            @endif
                         </div>
                         <div class="mt-5 space-y-3 text-sm text-slate-700">
-                            @foreach (($districtCounts ?? collect())->take(4) as $district => $count)
+                            @forelse ($regionCounts as $district => $count)
                                 <div class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>{{ $district }}</span><span>{{ $count }}</span></div>
-                            @endforeach
+                            @empty
+                                <p class="text-sm text-slate-500">Nenhuma região encontrada.</p>
+                            @endforelse
                         </div>
                     </article>
 
@@ -236,8 +377,8 @@
 
                 <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-xl font-semibold text-slate-900">Ocorrências recentes</h2>
-                        <button class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">Ver todas</button>
+                            <h2 class="text-xl font-semibold text-slate-900" data-dashboard-filter-title>Ocorrências recentes</h2>
+                            <a href="{{ route('agent.dashboard', $dashboardBaseFilters) }}" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-dashboard-filter="all" data-dashboard-show-all aria-expanded="{{ empty($dashboardFilters['status'] ?? '') ? 'true' : 'false' }}">Ver todas</a>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -253,7 +394,7 @@
                                     <th class="px-3 py-3 font-medium">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody data-dashboard-complaint-rows>
                                 @foreach ($recentComplaints as $complaint)
                                     <tr class="border-b border-slate-100 last:border-b-0">
                                         <td class="px-3 py-3 font-medium text-slate-500">{{ $complaint['id'] }}</td>
@@ -277,9 +418,11 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <p class="hidden py-8 text-center text-sm text-slate-500" data-dashboard-empty>Nenhuma denúncia encontrada no período selecionado.</p>
                     </div>
                 </section>
             </main>
         </div>
     </div>
+    <script type="application/json" id="dashboard-complaints-data">@json($dashboardComplaints ?? [])</script>
 </x-app-layout>

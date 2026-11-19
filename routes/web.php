@@ -23,6 +23,7 @@ Route::get('dashboard/analytics', [BackofficeController::class, 'agentDashboard'
 Route::middleware(['auth', 'verified', 'can:access-agent-panel'])->group(function () {
     Route::get('painel', [BackofficeController::class, 'agentOverview'])->name('agent.overview');
     Route::get('painel/dashboard', [BackofficeController::class, 'agentDashboard'])->name('agent.dashboard');
+    Route::get('painel/dashboard/pdf', [BackofficeController::class, 'agentDashboardPdf'])->name('agent.dashboard.pdf');
     Route::get('painel/mapa', [BackofficeController::class, 'agentMap'])->name('agent.mapa');
     Route::get('painel/relatorios', [BackofficeController::class, 'agentReports'])->name('agent.relatorios');
     Route::get('painel/relatorios/pdf', [BackofficeController::class, 'agentReportPdf'])->name('agent.relatorios.pdf');

@@ -56,7 +56,7 @@ new class extends Component
 
         $this->reset('profileImage');
 
-        $this->dispatch('profile-updated', name: $user->name);
+        $this->dispatch('profile-updated', name: $user->name, avatarVersion: now()->timestamp);
     }
 
     /**
@@ -94,7 +94,7 @@ new class extends Component
             <x-input-label for="profileImage" :value="__('Foto de perfil')" />
             <div class="mt-2 flex items-center gap-4">
                 @if (auth()->user()->profile_image)
-                    <img src="{{ route('profile.image') }}" alt="Foto de perfil" class="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200">
+                    <img data-profile-avatar data-image-url="{{ route('profile.image') }}" src="{{ route('profile.image', ['v' => auth()->user()->updated_at?->timestamp ?? time()]) }}" alt="Foto de perfil" class="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200">
                 @else
                     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-800 text-xl font-semibold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                 @endif
