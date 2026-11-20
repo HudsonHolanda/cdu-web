@@ -10,54 +10,7 @@
         ['label' => 'Urgentes', 'value' => '7', 'tone' => 'bg-white text-slate-900', 'icon' => 'alert', 'accent' => 'text-rose-500'],
     ];
 
-    $overviewComplaints = collect($complaints ?? [])->map(function ($complaint) {
-        $status = $complaint['status'] ?? 'Pendente';
-        $priority = $complaint['priority'] ?? 'Normal';
-
-        $statusFilter = match ($status) {
-            'Em análise' => 'analysis',
-            'Em andamento' => 'in_progress',
-            'Concluído' => 'resolved',
-            default => 'pending',
-        };
-
-        return [
-            'id' => $complaint['id'],
-            'occurrence' => $complaint['title'],
-            'location' => $complaint['location']['district'] ?? 'Não informado',
-            'date' => $complaint['date'],
-            'priority' => $priority,
-            'status' => $status,
-            'filter' => $statusFilter,
-            'filters' => array_values(array_filter([$statusFilter, $priority === 'Urgente' ? 'urgent' : 'normal'])),
-        ];
-    })->values();
-
-    $complaints = [
-        ['id' => '#042', 'occurrence' => 'Buraco na via', 'location' => 'Centro', 'date' => '23/08/26', 'priority' => 'Alta', 'status' => 'Pendente', 'statusClass' => 'bg-amber-100 text-amber-700'],
-        ['id' => '#041', 'occurrence' => 'Poste queimado', 'location' => 'Jd. Itália', 'date' => '23/08/26', 'priority' => 'Média', 'status' => 'Em Análise', 'statusClass' => 'bg-sky-100 text-sky-700'],
-        ['id' => '#040', 'occurrence' => 'Calçada danificada', 'location' => 'Vila Drica', 'date' => '22/08/26', 'priority' => 'Baixa', 'status' => 'Resolvida', 'statusClass' => 'bg-emerald-100 text-emerald-700'],
-        ['id' => '#039', 'occurrence' => 'Acúmulo de lixo', 'location' => 'Parque St. Tereza', 'date' => '21/08/26', 'priority' => 'Média', 'status' => 'Pendente', 'statusClass' => 'bg-amber-100 text-amber-700'],
-        ['id' => '#038', 'occurrence' => 'Buraco na via', 'location' => 'Cohab V', 'date' => '20/08/26', 'priority' => 'Alta', 'status' => 'Em Análise', 'statusClass' => 'bg-sky-100 text-sky-700'],
-    ];
-
-    // Os valores acima preservam o protótipo visual; em produção, a tela usa o painel alimentado pelo banco.
     $metrics = $panelMetrics ?? $metrics;
-    $complaints = collect($panelComplaints ?? [])->map(fn ($complaint) => [
-        'id' => $complaint['id'],
-        'occurrence' => $complaint['title'],
-        'location' => $complaint['location']['district'],
-        'date' => $complaint['date'],
-        'priority' => $complaint['priority'],
-        'status' => $complaint['status'],
-        'statusClass' => match ($complaint['status']) {
-            'Concluído' => 'bg-emerald-100 text-emerald-700',
-            'Em análise' => 'bg-sky-100 text-sky-700',
-            'Em andamento' => 'bg-blue-100 text-blue-700',
-            'Rejeitado' => 'bg-rose-100 text-rose-700',
-            default => 'bg-amber-100 text-amber-700',
-        },
-    ]);
 @endphp
 
 <div class="cdu-agent-page min-h-screen bg-[#efefee] text-slate-800">
@@ -137,7 +90,7 @@
 
             <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 @foreach ($metrics as $metric)
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <article class="cdu-filter-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" data-filter-card="{{ $metric['filter'] ?? '' }}">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 {{ $metric['accent'] }}">
                                 @switch($metric['icon'])
@@ -188,20 +141,18 @@
                 @endforeach
             </section>
 
-            <script type="application/json" id="overview-complaints-data">@json($overviewComplaints)</script>
-
             <section class="mt-8 grid gap-6 xl:grid-cols-[1.8fr_1fr]">
                 <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" data-overview-results-panel>
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <h2 class="text-xl font-semibold text-slate-900" data-overview-filter-title>Ocorrências Recentes</h2>
                         <div class="flex gap-2">
-                            <button type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-overview-filter="all">Ver Todas</button>
+                            <button type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-agent-show-all>Ver Todas</button>
                             <button type="button" class="rounded-lg border border-slate-200 bg-slate-900 px-3 py-2 text-sm font-medium text-white" data-overview-map-open>Abrir Mapa</button>
                         </div>
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-sm text-slate-700">
+                        <table class="min-w-full text-left text-sm text-slate-700" data-agent-datatable="overview" data-datatable-url="{{ route('agent.complaints.table') }}">
                             <thead>
                                 <tr class="border-b border-slate-200 text-slate-500">
                                     <th class="px-3 py-3 font-medium">ID</th>
@@ -210,30 +161,11 @@
                                     <th class="px-3 py-3 font-medium">Data</th>
                                     <th class="px-3 py-3 font-medium">Prioridade</th>
                                     <th class="px-3 py-3 font-medium">Status</th>
+                                    <th class="px-3 py-3 font-medium">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody data-overview-filter-rows>
-                                @foreach ($complaints as $complaint)
-                                    <tr class="border-b border-slate-100 last:border-b-0">
-                                        <td class="px-3 py-3 font-medium text-slate-500">{{ $complaint['id'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['occurrence'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['location'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['date'] }}</td>
-                                        <td class="px-3 py-3">
-                                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                                                {{ $complaint['priority'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-3">
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $complaint['statusClass'] }}">
-                                                {{ $complaint['status'] }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
+                            <tbody></tbody>
                         </table>
-                        <p class="hidden py-8 text-center text-sm text-slate-500" data-overview-filter-empty>Nenhuma denúncia encontrada para este filtro.</p>
                     </div>
                 </div>
 
@@ -269,8 +201,6 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     const initializeOverviewMaps = () => {
         const pageContainer = document.getElementById('complaints-map');

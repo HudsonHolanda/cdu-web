@@ -38,11 +38,9 @@ class ComplaintController extends Controller
                 ->orWhereRaw('LOWER(district) LIKE ?', [$term]));
         }
 
-        $items = [];
-        foreach ($query->get() as $complaint) {
-            $items[] = $this->toViewData($complaint);
-        }
-        $complaints = collect($items);
+        $complaints = $query->paginate(30)->withQueryString()->through(
+            fn (Complaint $complaint): array => $this->toViewData($complaint)
+        );
 
         return view('complaints.index', [
             'complaints' => $complaints,
@@ -72,13 +70,10 @@ class ComplaintController extends Controller
                 ->orWhereRaw('LOWER(district) LIKE ?', [$term]));
         }
 
-        $items = [];
-        foreach ($query->get() as $complaint) {
-            $items[] = $this->toViewData($complaint);
-        }
-
         return view('complaints.index', [
-            'complaints' => collect($items),
+            'complaints' => $query->paginate(30)->withQueryString()->through(
+                fn (Complaint $complaint): array => $this->toViewData($complaint)
+            ),
             'search' => $search,
             'myComplaints' => true,
         ]);

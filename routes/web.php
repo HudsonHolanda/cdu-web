@@ -10,7 +10,7 @@ Route::view('/', 'home');
 
 Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeController $backoffice) {
     return $request->user()->hasRole(\App\Enums\UserRole::AGENT)
-        ? $backoffice->agentOverview()
+        ? $backoffice->agentOverview($request)
         : view('dashboard');
 })
     ->middleware(['auth', 'verified'])
@@ -23,6 +23,7 @@ Route::get('dashboard/analytics', [BackofficeController::class, 'agentDashboard'
 Route::middleware(['auth', 'verified', 'can:access-agent-panel'])->group(function () {
     Route::get('painel', [BackofficeController::class, 'agentOverview'])->name('agent.overview');
     Route::get('painel/dashboard', [BackofficeController::class, 'agentDashboard'])->name('agent.dashboard');
+    Route::get('painel/denuncias/tabela', [BackofficeController::class, 'agentComplaintsTable'])->name('agent.complaints.table');
     Route::get('painel/dashboard/pdf', [BackofficeController::class, 'agentDashboardPdf'])->name('agent.dashboard.pdf');
     Route::get('painel/mapa', [BackofficeController::class, 'agentMap'])->name('agent.mapa');
     Route::get('painel/relatorios', [BackofficeController::class, 'agentReports'])->name('agent.relatorios');

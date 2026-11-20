@@ -39,7 +39,7 @@
         </form>
 
         <div class="complaints-list-meta">
-            <p><strong>{{ $complaints->count() }}</strong> {{ $complaints->count() === 1 ? 'denúncia encontrada' : 'denúncias encontradas' }}</p>
+            <p><strong>{{ method_exists($complaints, 'total') ? $complaints->total() : $complaints->count() }}</strong> {{ (method_exists($complaints, 'total') ? $complaints->total() : $complaints->count()) === 1 ? 'denúncia encontrada' : 'denúncias encontradas' }}</p>
             <span>Relatos da comunidade</span>
         </div>
 
@@ -98,6 +98,11 @@
                     </article>
                 @endforeach
             </div>
+            @if (method_exists($complaints, 'hasPages') && $complaints->hasPages())
+                <nav class="complaints-pagination" aria-label="Paginação das denúncias">
+                    {{ $complaints->links() }}
+                </nav>
+            @endif
         @endif
     </div>
 </x-app-layout>

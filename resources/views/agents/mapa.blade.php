@@ -181,6 +181,9 @@
                                     <span id="preview-id">ID -</span>
                                     <span id="preview-date">-</span>
                                 </div>
+                                <a id="preview-link" href="#" class="mt-4 inline-flex text-sm font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-900" hidden>
+                                    Ver denúncia completa
+                                </a>
                             </div>
                         </aside>
                     </div>
@@ -196,9 +199,6 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin=""></script>
-
     <script>
         const complaintData = @json($complaints);
 
@@ -211,6 +211,7 @@
             description: document.getElementById('preview-description'),
             id: document.getElementById('preview-id'),
             date: document.getElementById('preview-date'),
+            link: document.getElementById('preview-link'),
         };
 
         function setPreview(complaint) {
@@ -229,6 +230,12 @@
             preview.description.textContent = complaint.description;
             preview.id.textContent = 'ID ' + complaint.id;
             preview.date.textContent = complaint.date;
+            if (complaint.publicId) {
+                preview.link.href = '/denuncias/detalhe/' + encodeURIComponent(complaint.publicId);
+                preview.link.hidden = false;
+            } else {
+                preview.link.hidden = true;
+            }
         }
 
         const initializeAgentMap = () => {

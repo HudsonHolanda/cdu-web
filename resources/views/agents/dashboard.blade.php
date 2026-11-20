@@ -10,15 +10,6 @@
             ['label' => 'Resolvidas', 'value' => '458', 'delta' => '+18%', 'tone' => 'bg-emerald-100 text-emerald-700', 'icon' => 'check'],
         ];
 
-        $recentComplaints = [
-            ['id' => '#042', 'occurrence' => 'Buraco na via', 'location' => 'Centro', 'date' => '23/08/26', 'priority' => 'Alta', 'status' => 'Pendente'],
-            ['id' => '#041', 'occurrence' => 'Poste queimado', 'location' => 'Jd. Itália', 'date' => '23/08/26', 'priority' => 'Média', 'status' => 'Em análise'],
-            ['id' => '#040', 'occurrence' => 'Calçada danificada', 'location' => 'Vila Drica', 'date' => '22/08/26', 'priority' => 'Baixa', 'status' => 'Resolvida'],
-            ['id' => '#039', 'occurrence' => 'Acúmulo de lixo', 'location' => 'Parque St. Tereza', 'date' => '21/08/26', 'priority' => 'Média', 'status' => 'Pendente'],
-            ['id' => '#038', 'occurrence' => 'Buraco na via', 'location' => 'Cohab V', 'date' => '20/08/26', 'priority' => 'Alta', 'status' => 'Em análise'],
-        ];
-
-        $dashboardComplaints = collect($complaints ?? [])->values();
         $dashboardFilters = $dashboardFilters ?? [];
         $dashboardPeriod = 'month';
         $dashboardBaseFilters = collect($dashboardFilters)->except('status')->all();
@@ -27,18 +18,15 @@
             ...$metric,
             'value' => number_format((int) $metric['value'], 0, ',', '.'),
             'delta' => '',
-            'tone' => 'bg-slate-100 text-slate-700',
+            'tone' => match ($metric['filter'] ?? null) {
+                'pending' => 'bg-amber-100 text-amber-600',
+                'analysis' => 'bg-sky-100 text-sky-600',
+                'in_progress' => 'bg-blue-100 text-blue-600',
+                'resolved' => 'bg-emerald-100 text-emerald-600',
+                'urgent' => 'bg-rose-100 text-rose-600',
+                default => 'bg-slate-100 text-slate-600',
+            },
         ])->all();
-        $recentComplaints = collect($panelComplaints ?? $recentComplaints)->map(fn ($complaint) => [
-            'id' => $complaint['id'],
-            'publicId' => $complaint['publicId'],
-            'occurrence' => $complaint['title'],
-            'location' => $complaint['location']['district'],
-            'date' => $complaint['date'],
-            'priority' => $complaint['priority'],
-            'status' => $complaint['status'],
-        ])->all();
-
         $categoryColors = ['#0f766e', '#f59e0b', '#d946ef', '#3b82f6', '#94a3b8'];
         $categoryGradientStops = [];
         $categoryOffset = 0;
@@ -156,7 +144,7 @@
 
                 <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                     @foreach ($metrics as $metric)
-                        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <article class="cdu-filter-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm {{ ($dashboardFilters['status'] ?? '') === ($metric['filter'] ?? '') ? 'is-active' : '' }}" data-filter-card="{{ $metric['filter'] ?? '' }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-xl {{ $metric['tone'] }}">
                                     @switch($metric['icon'])
@@ -385,11 +373,11 @@
                 <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="mb-4 flex items-center justify-between">
                             <h2 class="text-xl font-semibold text-slate-900" data-dashboard-filter-title>Ocorrências recentes</h2>
-                            <a href="{{ route('agent.dashboard', $dashboardBaseFilters) }}" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-dashboard-filter="all" data-dashboard-show-all aria-expanded="{{ empty($dashboardFilters['status'] ?? '') ? 'true' : 'false' }}">Ver todas</a>
+                            <button type="button" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" data-agent-show-all>Ver todas</button>
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-sm text-slate-700">
+                        <table class="min-w-full text-left text-sm text-slate-700" data-agent-datatable="dashboard" data-datatable-url="{{ route('agent.complaints.table') }}" data-start-date="{{ $dashboardFilters['start_date'] ?? '' }}" data-end-date="{{ $dashboardFilters['end_date'] ?? '' }}" data-category="{{ $dashboardFilters['category'] ?? '' }}" data-status="{{ $dashboardFilters['status'] ?? '' }}">
                             <thead>
                                 <tr class="border-b border-slate-200 text-slate-500">
                                     <th class="px-3 py-3 font-medium">ID</th>
@@ -401,44 +389,11 @@
                                     <th class="px-3 py-3 font-medium">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody data-dashboard-complaint-rows>
-                                @foreach ($recentComplaints as $complaint)
-                                    <tr class="border-b border-slate-100 last:border-b-0">
-                                        <td class="px-3 py-3 font-medium text-slate-500">{{ $complaint['id'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['occurrence'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['location'] }}</td>
-                                        <td class="px-3 py-3">{{ $complaint['date'] }}</td>
-                                        <td class="px-3 py-3">
-                                            <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                                                {{ $complaint['priority'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-3">
-                                            @php
-                                                $statusTone = match ($complaint['status']) {
-                                                    'Concluído' => 'bg-emerald-100 text-emerald-700',
-                                                    'Em análise' => 'bg-sky-100 text-sky-700',
-                                                    'Em andamento' => 'bg-blue-100 text-blue-700',
-                                                    'Rejeitado' => 'bg-rose-100 text-rose-700',
-                                                    default => 'bg-amber-100 text-amber-700',
-                                                };
-                                            @endphp
-                                            <span class="rounded-full px-2 py-1 text-xs font-medium {{ $statusTone }}">
-                                                {{ $complaint['status'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-3">
-                                            <a href="{{ route('complaints.show', ['publicId' => $complaint['publicId']]) }}" class="text-sm font-medium text-slate-700 hover:text-slate-900">Ver</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
+                            <tbody></tbody>
                         </table>
-                        <p class="hidden py-8 text-center text-sm text-slate-500" data-dashboard-empty>Nenhuma denúncia encontrada no período selecionado.</p>
                     </div>
                 </section>
             </main>
         </div>
     </div>
-    <script type="application/json" id="dashboard-complaints-data">@json($dashboardComplaints ?? [])</script>
 </x-app-layout>

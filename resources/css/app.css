@@ -51,6 +51,49 @@ body {
     color: var(--cdu-text);
 }
 
+.agents-index-page .agents-list-card {
+    border: 1px solid var(--cdu-border);
+}
+
+.agents-index-page .agents-table tbody tr {
+    transition: background-color .18s ease;
+}
+
+.agents-index-page .agents-table tbody tr:hover {
+    background: var(--cdu-surface-muted);
+}
+
+.agents-avatar {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--cdu-green-soft);
+    color: var(--cdu-green-dark);
+    font-weight: 800;
+}
+
+.agents-role-badge,
+.agents-count-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: var(--cdu-green-soft);
+    color: var(--cdu-green-dark);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.agents-role-badge { margin-top: .25rem; padding: .15rem .5rem; }
+.agents-count-badge { padding: .4rem .7rem; }
+.agents-action-button { display: inline-flex; align-items: center; justify-content: center; border-radius: .55rem; padding: .48rem .7rem; font-size: .72rem; font-weight: 700; text-decoration: none; transition: background-color .18s ease, color .18s ease, border-color .18s ease; }
+.agents-action-button--edit { border: 1px solid var(--cdu-border); color: var(--cdu-text); }
+.agents-action-button--edit:hover { background: var(--cdu-surface-muted); }
+.agents-action-button--remove { border: 1px solid color-mix(in srgb, var(--cdu-danger) 40%, var(--cdu-border)); background: transparent; color: var(--cdu-danger); cursor: pointer; }
+.agents-action-button--remove:hover { background: color-mix(in srgb, var(--cdu-danger) 12%, transparent); }
+
 .cdu-logo-dark { display: none; }
 html.dark .cdu-logo-light { display: none; }
 html.dark .cdu-logo-dark { display: block; }

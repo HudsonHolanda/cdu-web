@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,11 +14,12 @@ use Illuminate\View\View;
 
 class BackofficeController extends Controller
 {
-    public function agentOverview(): View
+    public function agentOverview(Request $request): View
     {
         $complaints = $this->complaints();
+        $panelData = $this->panelData($complaints);
 
-        return view('agents.overview', $this->panelData($complaints));
+        return view('agents.overview', $panelData);
     }
 
     public function agentDashboard(Request $request): View
@@ -27,8 +29,11 @@ class BackofficeController extends Controller
         $trendPeriod = $this->dashboardTrendPeriod($request);
         $dashboardFilters = $this->dashboardFilters($request);
 
+        $panelData = $this->panelData($complaints, $trendPeriod);
+        $panelData['panelMetrics'] = $this->panelData($allComplaints)['panelMetrics'];
+
         return view('agents.dashboard', [
-            ...$this->panelData($complaints, $trendPeriod),
+            ...$panelData,
             'dashboardFilters' => $dashboardFilters,
             'dashboardCategories' => collect([
                 'Buraco na via',
@@ -75,6 +80,7 @@ class BackofficeController extends Controller
         return view('agents.mapa', [
             'mapComplaints' => $complaints->map(fn (array $complaint): array => [
                 'id' => $complaint['id'],
+                'publicId' => $complaint['publicId'],
                 'title' => $complaint['title'],
                 'address' => $complaint['location']['address'],
                 'district' => $complaint['location']['district'],
@@ -86,6 +92,71 @@ class BackofficeController extends Controller
                 'description' => $complaint['description'],
                 'date' => $complaint['date'],
             ])->values(),
+        ]);
+    }
+
+    public function agentComplaintsTable(Request $request): JsonResponse
+    {
+        $query = Complaint::query();
+        $context = $request->input('context', 'dashboard');
+
+        if ($context === 'dashboard') {
+            $query
+                ->when($request->filled('start_date'), fn (Builder $builder) => $builder->whereDate('created_at', '>=', $request->input('start_date')))
+                ->when($request->filled('end_date'), fn (Builder $builder) => $builder->whereDate('created_at', '<=', $request->input('end_date')));
+        }
+
+        $this->applyTableFilter($query, $request->input('status'), $request->input('category'));
+
+        $recordsTotal = (clone $query)->count();
+        $search = trim((string) $request->input('search.value', ''));
+
+        if ($search !== '') {
+            $query->where(function (Builder $builder) use ($search): void {
+                $builder
+                    ->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('district', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        $recordsFiltered = (clone $query)->count();
+        $orderColumns = [
+            0 => 'complaint_id',
+            1 => 'title',
+            2 => 'district',
+            3 => 'created_at',
+            4 => 'high_priority',
+            5 => 'status',
+        ];
+        $orderColumn = $orderColumns[(int) $request->input('order.0.column', 3)] ?? 'created_at';
+        $orderDirection = strtolower((string) $request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $length = (int) $request->input('length', 100);
+        $length = $length < 1 ? 100 : min($length, 100);
+        $start = max(0, (int) $request->input('start', 0));
+
+        $rows = $query
+            ->orderBy($orderColumn, $orderDirection)
+            ->skip($start)
+            ->take($length)
+            ->get()
+            ->map(fn (Complaint $complaint): array => [
+                'id' => '#'.str_pad((string) $complaint->complaint_id, 3, '0', STR_PAD_LEFT),
+                'publicId' => $complaint->public_id,
+                'title' => $complaint->title,
+                'district' => $complaint->district ?: 'Não informado',
+                'date' => $complaint->created_at?->format('d/m/Y'),
+                'priority' => $complaint->high_priority ? 'Urgente' : 'Normal',
+                'status' => $complaint->status?->label() ?? 'Pendente',
+            ])->values();
+
+        return response()->json([
+            'draw' => (int) $request->input('draw', 0),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $rows,
         ]);
     }
 
@@ -266,6 +337,24 @@ class BackofficeController extends Controller
             'dailyStatusCounts' => $this->trendStatusCounts($complaints, $trendPeriod),
             'totalComplaints' => $complaints->count(),
         ];
+    }
+
+    private function applyTableFilter(Builder $query, ?string $status, ?string $category): void
+    {
+        $query
+            ->when($category, fn (Builder $builder) => $builder->where('category', $category))
+            ->when($status === 'urgent', fn (Builder $builder) => $builder->where('high_priority', true))
+            ->when($status === 'normal', fn (Builder $builder) => $builder->where('high_priority', false))
+            ->when(in_array($status, ['pending', 'analysis', 'in_progress', 'resolved'], true), function (Builder $builder) use ($status): void {
+                $statusValue = match ($status) {
+                    'pending' => ComplaintStatus::PENDING,
+                    'analysis' => ComplaintStatus::UNDER_REVIEW,
+                    'in_progress' => ComplaintStatus::IN_PROGRESS,
+                    'resolved' => ComplaintStatus::RESOLVED,
+                };
+
+                $builder->where('status', $statusValue);
+            });
     }
 
     private function dashboardTrendPeriod(Request $request): string

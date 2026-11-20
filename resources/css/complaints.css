@@ -224,6 +224,15 @@
 .complaints-page .complaint-field input::placeholder,
 .complaints-page .complaint-field textarea::placeholder { color: var(--complaints-muted); }
 .complaints-page .complaints-search button { border-color: var(--cdu-green); background: var(--cdu-green-soft); color: var(--cdu-green-dark); }
+
+.complaints-pagination,
+.cdu-dashboard-pagination { display: flex; justify-content: center; overflow-x: auto; padding: .25rem; }
+.complaints-pagination nav, .cdu-dashboard-pagination nav { width: 100%; }
+.complaints-pagination .pagination, .cdu-dashboard-pagination .pagination { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.complaints-pagination .page-item .page-link, .cdu-dashboard-pagination .page-item .page-link { display: inline-flex; min-width: 2.25rem; min-height: 2.25rem; align-items: center; justify-content: center; border: 1px solid var(--cdu-border); border-radius: .55rem; background: var(--cdu-surface); color: var(--cdu-text); font-size: .78rem; text-decoration: none; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+.complaints-pagination .page-item:not(.active):not(.disabled) .page-link:hover, .cdu-dashboard-pagination .page-item:not(.active):not(.disabled) .page-link:hover { border-color: var(--cdu-green); background: var(--cdu-green-soft); }
+.complaints-pagination .page-item.active .page-link, .cdu-dashboard-pagination .page-item.active .page-link { border-color: var(--cdu-green); background: var(--cdu-green); color: #fff; }
+.complaints-pagination .page-item.disabled .page-link, .cdu-dashboard-pagination .page-item.disabled .page-link { cursor: not-allowed; opacity: .45; }
 .complaints-page .complaint-card,
 .complaints-page .complaint-detail-panel,
 .complaints-page .complaint-form-panel,
