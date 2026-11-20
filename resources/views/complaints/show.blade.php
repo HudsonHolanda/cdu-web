@@ -1,6 +1,7 @@
 <x-app-layout>
     @php
         $location = $complaint['location'];
+            $canManage = auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) ?? false;
         $attachments = $complaint['attachments'] ?? [$complaint['imageUrl']];
         $mapUrl = 'https://www.openstreetmap.org/?mlat='.$location['latitude'].'&mlon='.$location['longitude'].'#map=17/'.$location['latitude'].'/'.$location['longitude'];
         $latitude = (float) $location['latitude'];
@@ -24,7 +25,17 @@
                     <span>{{ $location['address'] }}</span>
                 </div>
             </div>
-            <span class="complaint-status complaint-status--{{ \Illuminate\Support\Str::slug($complaint['status']) }}">{{ $complaint['status'] }}</span>
+            <div class="complaint-detail-heading-actions">
+                @if ($canManage)
+                    <a class="complaint-detail-button" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">Editar</a>
+                    <form method="POST" action="{{ route('complaints.destroy', ['complaint' => $complaint['complaintId']]) }}" onsubmit="return confirm('Deseja excluir esta denúncia?');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="complaint-detail-button complaint-detail-button--danger" type="submit">Excluir</button>
+                    </form>
+                @endif
+                <span class="complaint-status complaint-status--{{ \Illuminate\Support\Str::slug($complaint['status']) }}">{{ $complaint['status'] }}</span>
+            </div>
         </div>
 
         <nav class="complaint-detail-tabs" aria-label="Seções da denúncia">
@@ -94,6 +105,12 @@
                         <div><strong>Denúncia registrada</strong><span>{{ \Illuminate\Support\Carbon::parse($complaint['createdAt'])->format('d/m/Y · H:i') }}</span></div>
                     </div>
                     <p class="complaint-history-note">Novas atualizações aparecerão aqui conforme o atendimento avançar.</p>
+                    @if (!empty($complaint['statusJustification']))
+                        <div class="complaint-status-justification">
+                            <strong>Justificativa do encerramento</strong>
+                            <p>{{ $complaint['statusJustification'] }}</p>
+                        </div>
+                    @endif
                 </section>
             </aside>
         </div>

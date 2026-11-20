@@ -16,6 +16,7 @@
 
         $statusFilter = match ($status) {
             'Em análise' => 'analysis',
+            'Em andamento' => 'in_progress',
             'Concluído' => 'resolved',
             default => 'pending',
         };
@@ -28,7 +29,7 @@
             'priority' => $priority,
             'status' => $status,
             'filter' => $statusFilter,
-            'filters' => array_values(array_filter([$statusFilter, $priority === 'Urgente' ? 'urgent' : null])),
+            'filters' => array_values(array_filter([$statusFilter, $priority === 'Urgente' ? 'urgent' : 'normal'])),
         ];
     })->values();
 
@@ -49,11 +50,17 @@
         'date' => $complaint['date'],
         'priority' => $complaint['priority'],
         'status' => $complaint['status'],
-        'statusClass' => $complaint['status'] === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : ($complaint['status'] === 'Em análise' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'),
+        'statusClass' => match ($complaint['status']) {
+            'Concluído' => 'bg-emerald-100 text-emerald-700',
+            'Em análise' => 'bg-sky-100 text-sky-700',
+            'Em andamento' => 'bg-blue-100 text-blue-700',
+            'Rejeitado' => 'bg-rose-100 text-rose-700',
+            default => 'bg-amber-100 text-amber-700',
+        },
     ]);
 @endphp
 
-<div class="min-h-screen bg-[#efefee] text-slate-800">
+<div class="cdu-agent-page min-h-screen bg-[#efefee] text-slate-800">
     <div class="flex min-h-screen">
         <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
             <div>
@@ -149,6 +156,17 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 3" />
                                         </svg>
                                         @break
+                                    @case('clock')
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <circle cx="12" cy="12" r="8.5" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5v5l3 1.75" />
+                                        </svg>
+                                        @break
+                                    @case('minus')
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
+                                        </svg>
+                                        @break
                                     @case('alert')
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -238,7 +256,7 @@
 
 <div id="overview-map-modal" class="fixed inset-0 z-[60] hidden bg-slate-950/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="overview-map-modal-title">
     <div class="flex h-full w-full items-center justify-center" data-overview-map-backdrop>
-        <div class="w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-2xl cdu-agent-modal-surface">
             <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3 sm:px-6">
                 <div>
                     <h2 id="overview-map-modal-title" class="text-lg font-semibold text-slate-900">Mapa de Ocorrências</h2>
@@ -254,12 +272,18 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (!window.L) return;
+    const initializeOverviewMaps = () => {
+        const pageContainer = document.getElementById('complaints-map');
+        if (!pageContainer || pageContainer.dataset.mapReady === 'true') return;
+        if (!window.L) {
+            window.setTimeout(initializeOverviewMaps, 150);
+            return;
+        }
 
         const markers = @json($mapMarkers ?? []);
-        const addMarkers = (map, radius = 10) => {
-            markers.forEach((marker) => {
+        const renderMarkers = (map, radius = 10, filter = 'all') => {
+            const layers = [];
+            markers.filter((marker) => filter === 'all' || marker.filters?.includes(filter)).forEach((marker) => {
                 const circle = L.circleMarker(marker.coords, {
                     radius,
                     color: marker.color,
@@ -269,8 +293,12 @@
                 }).addTo(map);
 
                 circle.bindPopup(`<strong>${marker.label}</strong>`);
+                layers.push(circle);
             });
+            return layers;
         };
+
+        const clearMarkers = (layers) => layers.forEach((layer) => layer.remove());
 
         const addTiles = (map) => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -278,16 +306,28 @@
         }).addTo(map);
 
         const pageMap = L.map('complaints-map').setView([-23.5489, -46.6388], 12);
+        pageContainer.dataset.mapReady = 'true';
         addTiles(pageMap);
-        addMarkers(pageMap);
+        let pageMarkers = [];
+        let modalMarkers = [];
+        let activeFilter = 'all';
+        let modalMap;
+        const updateMapMarkers = (filter) => {
+            activeFilter = filter;
+            clearMarkers(pageMarkers);
+            pageMarkers = renderMarkers(pageMap, 10, activeFilter) || [];
+            if (modalMap) {
+                clearMarkers(modalMarkers);
+                modalMarkers = renderMarkers(modalMap, 12, activeFilter) || [];
+            }
+        };
+        updateMapMarkers(activeFilter);
 
         const modal = document.getElementById('overview-map-modal');
         const modalMapContainer = document.getElementById('overview-modal-map');
         const openButton = document.querySelector('[data-overview-map-open]');
         const closeButton = document.querySelector('[data-overview-map-close]');
         const backdrop = document.querySelector('[data-overview-map-backdrop]');
-        let modalMap;
-
         const closeModal = () => {
             modal.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
@@ -300,7 +340,7 @@
             if (!modalMap) {
                 modalMap = L.map(modalMapContainer).setView([-23.5489, -46.6388], 12);
                 addTiles(modalMap);
-                addMarkers(modalMap, 12);
+                modalMarkers = renderMarkers(modalMap, 12, activeFilter) || [];
             }
 
             window.setTimeout(() => modalMap.invalidateSize(), 50);
@@ -308,12 +348,20 @@
 
         openButton?.addEventListener('click', openModal);
         closeButton?.addEventListener('click', closeModal);
+        window.addEventListener('overview-map-filter', (event) => updateMapMarkers(event.detail?.filter || 'all'));
         backdrop?.addEventListener('click', (event) => {
             if (event.target === backdrop) closeModal();
         });
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
         });
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeOverviewMaps, { once: true });
+    } else {
+        initializeOverviewMaps();
+    }
+    document.addEventListener('livewire:navigated', initializeOverviewMaps);
 </script>
 </x-app-layout>

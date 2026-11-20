@@ -38,7 +38,6 @@
             <main class="{{ auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) ? 'cdu-backoffice-main' : '' }}">
                 @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT))
                     <div class="cdu-backoffice-topbar">
-                        <div class="cdu-search">⌕ <span>Buscar</span></div>
                         <div class="cdu-user-chip">
                             @if (auth()->user()->profile_image)
                                 <img data-profile-avatar data-image-url="{{ route('profile.image') }}" class="cdu-user-avatar" src="{{ route('profile.image', ['v' => auth()->user()->updated_at?->timestamp ?? time()]) }}" alt="Foto de {{ auth()->user()->name }}">

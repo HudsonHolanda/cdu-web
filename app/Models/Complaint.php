@@ -40,4 +40,14 @@ class Complaint extends Model
     {
         return $this->hasMany(ComplaintImage::class, 'complaint_id', 'complaint_id');
     }
+
+    public function deletionRequests(): HasMany
+    {
+        return $this->hasMany(ComplaintDeletionRequest::class, 'complaint_id', 'complaint_id');
+    }
+
+    public function updateRequests(): HasMany
+    {
+        return $this->hasMany(ComplaintUpdateRequest::class, 'complaint_id', 'complaint_id');
+    }
 }

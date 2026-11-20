@@ -19,6 +19,19 @@
             <div class="complaint-success-message" role="status">{{ session('success') }}</div>
         @endif
 
+        @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) && (($pendingDeletionRequests ?? collect())->isNotEmpty() || ($pendingUpdateRequests ?? collect())->isNotEmpty()))
+            <section class="complaint-detail-panel" aria-labelledby="deletion-requests-title">
+                <div class="complaint-section-heading">
+                    <div>
+                        <p class="complaint-section-kicker">Ação necessária</p>
+                        <h2 id="deletion-requests-title">Solicitações de exclusão</h2>
+                    </div>
+                    <a class="complaint-action-link" href="{{ route('complaints.deletion-requests') }}">Analisar todas</a>
+                </div>
+                <p>Existem {{ ($pendingDeletionRequests->count() ?? 0) + ($pendingUpdateRequests->count() ?? 0) }} solicitação(ões) aguardando análise.</p>
+            </section>
+        @endif
+
         <form class="complaints-search" method="GET" action="{{ route(($myComplaints ?? false) ? 'complaints.mine' : 'complaints.index') }}" role="search">
             <label class="sr-only" for="complaints-search">Buscar denúncias</label>
             <input id="complaints-search" name="busca" type="search" value="{{ $search }}" placeholder="Buscar por título, descrição ou endereço">
@@ -57,15 +70,26 @@
                             </div>
                             <div class="complaint-card-footer">
                                 <span>Publicada em {{ \Illuminate\Support\Carbon::parse($complaint['createdAt'])->format('d/m/Y') }}</span>
-                                @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) || (($myComplaints ?? false) && $complaint['status'] === 'Pendente'))
+                                @if (auth()->user()?->hasRole(\App\Enums\UserRole::AGENT))
                                     <div class="complaint-card-actions">
-                                        <a class="complaint-action-link" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">{{ auth()->user()?->hasRole(\App\Enums\UserRole::AGENT) ? 'Atualizar' : 'Editar' }}</a>
-                                        @if (($myComplaints ?? false))
-                                        <form method="POST" action="{{ route('complaints.destroy', ['complaint' => $complaint['complaintId']]) }}" onsubmit="return confirm('Excluir este relato? Esta ação não pode ser desfeita.')">
+                                        <a class="complaint-action-link" href="{{ route('complaints.edit', ['complaint' => $complaint['complaintId']]) }}">Atualizar</a>
+                                        <form method="POST" action="{{ route('complaints.destroy', ['complaint' => $complaint['complaintId']]) }}" onsubmit="return confirm('Deseja excluir esta denúncia?');">
                                             @csrf
                                             @method('DELETE')
                                             <button class="complaint-action-link complaint-action-delete" type="submit">Excluir</button>
                                         </form>
+                                    </div>
+                                @elseif (($myComplaints ?? false))
+                                    <div class="complaint-card-actions">
+                                        @if (($complaint['updateRequestStatus'] ?? null) === 'pending')
+                                            <span class="complaint-action-link">Alteração pendente</span>
+                                        @else
+                                            <a class="complaint-action-link" href="{{ route('complaints.update-requests.create', ['complaint' => $complaint['complaintId']]) }}">Solicitar alteração</a>
+                                        @endif
+                                        @if (($complaint['deletionRequestStatus'] ?? null) === 'pending')
+                                            <span class="complaint-action-link">Exclusão pendente</span>
+                                        @else
+                                            <a class="complaint-action-link complaint-action-delete" href="{{ route('complaints.deletion-requests.create', ['complaint' => $complaint['complaintId']]) }}">Solicitar exclusão</a>
                                         @endif
                                     </div>
                                 @endif

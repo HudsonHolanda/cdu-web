@@ -49,8 +49,33 @@
                     </div>
                 </section>
 
+                @if ($isBackofficeEditor)
+                    <section class="complaint-form-section">
+                        <div class="complaint-form-section-heading"><span>02</span><div><h2>Gestão do atendimento</h2><p>Atualize o status e a prioridade desta denúncia.</p></div></div>
+                        <div class="complaint-form-row">
+                            <div class="complaint-field">
+                                <label for="status">Status <span aria-hidden="true">*</span></label>
+                                <select id="status" name="status" required>
+                                    @foreach (\App\Enums\ComplaintStatus::cases() as $status)
+                                        <option value="{{ $status->value }}" @selected((int) old('status', $complaint['statusValue'] ?? 0) === $status->value)>{{ $status->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="complaint-field">
+                                <label for="high_priority">Prioridade</label>
+                                <label class="complaint-checkbox-field"><input id="high_priority" name="high_priority" type="checkbox" value="1" @checked(old('high_priority', $complaint['highPriority']))> Marcar como urgente</label>
+                            </div>
+                            <div class="complaint-field md:col-span-2">
+                                <label for="status_justification">Justificativa do status <span class="complaint-optional">(obrigatória ao concluir ou rejeitar)</span></label>
+                                <textarea id="status_justification" name="status_justification" rows="3" maxlength="1000" placeholder="Explique o motivo da conclusão ou rejeição.">{{ old('status_justification', $complaint['statusJustification'] ?? '') }}</textarea>
+                                @error('status_justification')<span class="complaint-field-error">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
                 <section class="complaint-form-section">
-                    <div class="complaint-form-section-heading"><span>02</span><div><h2>Onde acontece</h2><p>Revise o endereço e as coordenadas.</p></div></div>
+                    <div class="complaint-form-section-heading"><span>{{ $isBackofficeEditor ? '03' : '02' }}</span><div><h2>Onde acontece</h2><p>Revise o endereço e as coordenadas.</p></div></div>
                     <div class="complaint-field">
                         <label for="address">Endereço <span aria-hidden="true">*</span></label>
                         <input id="address" name="address" type="text" value="{{ old('address', $location['address']) }}" maxlength="180" required>
@@ -201,5 +226,18 @@
             if (cepInput.value.replace(/\D/g, '').length === 8) lookupCep();
         });
         cepInput?.addEventListener('blur', lookupCep);
+    </script>
+    <script>
+        (() => {
+            const status = document.getElementById('status');
+            const justification = document.getElementById('status_justification');
+            if (!status || !justification) return;
+            const terminalStatuses = @json([\App\Enums\ComplaintStatus::RESOLVED->value, \App\Enums\ComplaintStatus::REJECTED->value]);
+            const updateRequirement = () => {
+                justification.required = terminalStatuses.includes(Number(status.value));
+            };
+            status.addEventListener('change', updateRequirement);
+            updateRequirement();
+        })();
     </script>
 </x-app-layout>

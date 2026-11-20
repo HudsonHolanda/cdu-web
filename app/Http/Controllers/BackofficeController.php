@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BackofficeController extends Controller
@@ -49,6 +50,8 @@ class BackofficeController extends Controller
                 'total' => $complaints->count(),
                 'pending' => $complaints->where('_status', ComplaintStatus::PENDING)->count(),
                 'analysis' => $complaints->where('_status', ComplaintStatus::UNDER_REVIEW)->count(),
+                'in_progress' => $complaints->where('_status', ComplaintStatus::IN_PROGRESS)->count(),
+                'normal' => $complaints->where('highPriority', false)->count(),
                 'resolved' => $complaints->where('_status', ComplaintStatus::RESOLVED)->count(),
                 'urgent' => $complaints->where('highPriority', true)->count(),
             ],
@@ -136,6 +139,7 @@ class BackofficeController extends Controller
             $items[] = [
                 'id' => '#'.str_pad((string) $complaint->complaint_id, 3, '0', STR_PAD_LEFT),
                 'complaintId' => 'DEN-'.now()->format('Y').'-'.$complaint->complaint_id,
+                'publicId' => $complaint->public_id,
                 'category' => $complaint->category,
                 'title' => $complaint->title,
                 'description' => $complaint->description,
@@ -168,6 +172,8 @@ class BackofficeController extends Controller
             'total' => $complaints->count(),
             'pending' => $statusCount(ComplaintStatus::PENDING),
             'analysis' => $statusCount(ComplaintStatus::UNDER_REVIEW),
+            'in_progress' => $statusCount(ComplaintStatus::IN_PROGRESS),
+            'normal' => $complaints->where('highPriority', false)->count(),
             'resolved' => $statusCount(ComplaintStatus::RESOLVED),
             'urgent' => $complaints->where('highPriority', true)->count(),
             'categories' => $complaints->groupBy('category')->map->count()->sortDesc(),
@@ -186,8 +192,10 @@ class BackofficeController extends Controller
             $matchesStatus = match ($status) {
                 'pending' => $complaint['_status'] === ComplaintStatus::PENDING,
                 'analysis' => $complaint['_status'] === ComplaintStatus::UNDER_REVIEW,
+                'in_progress' => $complaint['_status'] === ComplaintStatus::IN_PROGRESS,
                 'resolved' => $complaint['_status'] === ComplaintStatus::RESOLVED,
                 'urgent' => (bool) $complaint['highPriority'],
+                'normal' => ! $complaint['highPriority'],
                 default => true,
             };
 
@@ -221,14 +229,26 @@ class BackofficeController extends Controller
             'panelMetrics' => [
                 ['label' => 'Pendentes', 'value' => $statusCount(ComplaintStatus::PENDING), 'icon' => 'clipboard', 'accent' => 'text-amber-500', 'filter' => 'pending'],
                 ['label' => 'Em Análise', 'value' => $statusCount(ComplaintStatus::UNDER_REVIEW), 'icon' => 'folder', 'accent' => 'text-sky-500', 'filter' => 'analysis'],
+                ['label' => 'Em andamento', 'value' => $statusCount(ComplaintStatus::IN_PROGRESS), 'icon' => 'clock', 'accent' => 'text-blue-500', 'filter' => 'in_progress'],
                 ['label' => 'Resolvidas', 'value' => $statusCount(ComplaintStatus::RESOLVED), 'icon' => 'check', 'accent' => 'text-emerald-500', 'filter' => 'resolved'],
                 ['label' => 'Urgentes', 'value' => $complaints->where('highPriority', true)->count(), 'icon' => 'alert', 'accent' => 'text-rose-500', 'filter' => 'urgent'],
+                ['label' => 'Normais', 'value' => $complaints->where('highPriority', false)->count(), 'icon' => 'minus', 'accent' => 'text-slate-500', 'filter' => 'normal'],
             ],
             'panelComplaints' => $complaints->take(5)->values(),
             'mapMarkers' => $complaints->map(fn (array $complaint): array => [
                 'coords' => [$complaint['location']['latitude'], $complaint['location']['longitude']],
                 'color' => $complaint['color'],
                 'label' => $complaint['status'],
+                'filters' => array_values(array_filter([
+                    $complaint['highPriority'] ? 'urgent' : 'normal',
+                    match ($complaint['_status']) {
+                        ComplaintStatus::PENDING => 'pending',
+                        ComplaintStatus::UNDER_REVIEW => 'analysis',
+                        ComplaintStatus::IN_PROGRESS => 'in_progress',
+                        ComplaintStatus::RESOLVED => 'resolved',
+                        default => null,
+                    },
+                ])),
             ])->values()->all(),
             'categoryCounts' => $complaints->groupBy('category')->map->count()->sortDesc(),
             'statusCounts' => $complaints->groupBy('status')->map->count()->sortDesc(),
@@ -246,6 +266,7 @@ class BackofficeController extends Controller
                     'urgent' => $day->where('highPriority', true)->count(),
                     'pending' => $day->where('_status', ComplaintStatus::PENDING)->count(),
                     'analysis' => $day->where('_status', ComplaintStatus::UNDER_REVIEW)->count(),
+                    'in_progress' => $day->where('_status', ComplaintStatus::IN_PROGRESS)->count(),
                     'resolved' => $day->where('_status', ComplaintStatus::RESOLVED)->count(),
                 ]),
             'totalComplaints' => $complaints->count(),
@@ -283,7 +304,18 @@ class BackofficeController extends Controller
             'district' => $complaint->district ?: 'Não informado',
             'status' => $complaint->status?->label() ?? 'Pendente',
             'priority' => $complaint->high_priority ? 'Urgente' : 'Normal',
+            'justification' => $this->latestStatusJustification($complaint),
             'date' => $complaint->created_at?->format('d/m/Y H:i'),
         ])->values();
+    }
+
+    private function latestStatusJustification(Complaint $complaint): ?string
+    {
+        return DB::table('complaint_status_histories')
+            ->where('complaint_id', $complaint->complaint_id)
+            ->whereIn('to_status', [ComplaintStatus::RESOLVED->value, ComplaintStatus::REJECTED->value])
+            ->whereNotNull('justification')
+            ->latest('id')
+            ->value('justification');
     }
 }

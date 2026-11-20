@@ -29,6 +29,7 @@
         ])->all();
         $recentComplaints = collect($panelComplaints ?? $recentComplaints)->map(fn ($complaint) => [
             'id' => $complaint['id'],
+            'publicId' => $complaint['publicId'],
             'occurrence' => $complaint['title'],
             'location' => $complaint['location']['district'],
             'date' => $complaint['date'],
@@ -49,7 +50,7 @@
         $categoryGradient = $categoryGradientStops ? implode(', ', $categoryGradientStops) : '#e2e8f0 0 100%';
     @endphp
 
-    <div class="min-h-screen bg-[#efefee] text-slate-800">
+    <div class="cdu-agent-page min-h-screen bg-[#efefee] text-slate-800">
         <div class="flex min-h-screen">
             <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
                 <div>
@@ -189,6 +190,11 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.2 4.2L19 7"/>
                                             </svg>
                                             @break
+                                        @case('minus')
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path stroke-linecap="round" d="M5 12h14"/>
+                                            </svg>
+                                            @break
                                     @endswitch
                                 </div>
                                 <a href="{{ route('agent.dashboard', [...$dashboardBaseFilters, 'status' => $metric['filter'] ?? '']) }}" class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200" data-dashboard-filter="{{ $metric['filter'] ?? '' }}" aria-label="Filtrar denúncias: {{ $metric['label'] }}" aria-expanded="{{ ($dashboardFilters['status'] ?? '') === ($metric['filter'] ?? '') ? 'true' : 'false' }}">
@@ -243,6 +249,7 @@
                                 'urgent' => ['label' => 'Urgente', 'color' => '#ef4444'],
                                 'pending' => ['label' => 'Pendente', 'color' => '#fbbf24'],
                                 'analysis' => ['label' => 'Em Análise', 'color' => '#0ea5e9'],
+                                'in_progress' => ['label' => 'Em andamento', 'color' => '#2563eb'],
                                 'resolved' => ['label' => 'Resolvida', 'color' => '#10b981'],
                             ];
                             $trendMax = max(1, (int) $dailyStatusCounts->flatMap(fn ($counts) => array_values($counts))->max());
@@ -407,12 +414,21 @@
                                             </span>
                                         </td>
                                         <td class="px-3 py-3">
-                                            <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
+                                            @php
+                                                $statusTone = match ($complaint['status']) {
+                                                    'Concluído' => 'bg-emerald-100 text-emerald-700',
+                                                    'Em análise' => 'bg-sky-100 text-sky-700',
+                                                    'Em andamento' => 'bg-blue-100 text-blue-700',
+                                                    'Rejeitado' => 'bg-rose-100 text-rose-700',
+                                                    default => 'bg-amber-100 text-amber-700',
+                                                };
+                                            @endphp
+                                            <span class="rounded-full px-2 py-1 text-xs font-medium {{ $statusTone }}">
                                                 {{ $complaint['status'] }}
                                             </span>
                                         </td>
                                         <td class="px-3 py-3">
-                                            <button class="text-sm font-medium text-slate-700 hover:text-slate-900">Ver</button>
+                                            <a href="{{ route('complaints.show', ['publicId' => $complaint['publicId']]) }}" class="text-sm font-medium text-slate-700 hover:text-slate-900">Ver</a>
                                         </td>
                                     </tr>
                                 @endforeach

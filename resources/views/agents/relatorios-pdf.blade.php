@@ -4,6 +4,6 @@
 <body>
     <h1>Relatório geral de denúncias</h1><p class="muted">Gerado em {{ now()->format('d/m/Y H:i') }}</p>
     <div class="summary"><div class="card">Total<strong>{{ $summary['total'] }}</strong></div><div class="card">Urgentes<strong>{{ $summary['urgent'] }}</strong></div><div class="card">Resolvidas<strong>{{ $summary['resolved'] }}</strong></div></div>
-    <table><thead><tr><th>ID</th><th>Ocorrência</th><th>Categoria</th><th>Bairro</th><th>Status</th><th>Prioridade</th><th>Data</th></tr></thead><tbody>@forelse ($rows as $row)<tr><td>{{ $row['id'] }}</td><td>{{ $row['title'] }}</td><td>{{ $row['category'] }}</td><td>{{ $row['district'] }}</td><td>{{ $row['status'] }}</td><td>{{ $row['priority'] }}</td><td>{{ $row['date'] }}</td></tr>@empty<tr><td colspan="7">Nenhuma ocorrência encontrada.</td></tr>@endforelse</tbody></table>
+    <table><thead><tr><th>ID</th><th>Ocorrência</th><th>Categoria</th><th>Bairro</th><th>Status</th><th>Prioridade</th><th>Justificativa</th><th>Data</th></tr></thead><tbody>@forelse ($rows as $row)<tr><td>{{ $row['id'] }}</td><td>{{ $row['title'] }}</td><td>{{ $row['category'] }}</td><td>{{ $row['district'] }}</td><td>{{ $row['status'] }}</td><td>{{ $row['priority'] }}</td><td>{{ $row['justification'] ?: '—' }}</td><td>{{ $row['date'] }}</td></tr>@empty<tr><td colspan="8">Nenhuma ocorrência encontrada.</td></tr>@endforelse</tbody></table>
 </body>
 </html>

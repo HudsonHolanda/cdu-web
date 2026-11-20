@@ -71,7 +71,7 @@
         $complaints = $mapComplaints ?? $complaints;
     @endphp
 
-    <div class="min-h-screen bg-[#efefee] text-slate-800">
+    <div class="cdu-agent-map min-h-screen bg-[#efefee] text-slate-800">
         <div class="flex min-h-screen">
             <aside class="cdu-embedded-panel-sidebar hidden w-64 flex-col justify-between bg-[#1d3b34] px-5 py-6 text-white lg:flex">
                 <div>
@@ -231,19 +231,24 @@
             preview.date.textContent = complaint.date;
         }
 
-        window.addEventListener('load', function () {
+        const initializeAgentMap = () => {
             const mapContainer = document.getElementById('agent-map');
 
             if (!mapContainer) {
                 return;
             }
 
+            if (mapContainer.dataset.mapReady === 'true') {
+                return;
+            }
+
             if (!window.L) {
-                mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#e2e8f0;color:#475569;font-weight:600;">Mapa indisponível no momento.</div>';
+                window.setTimeout(initializeAgentMap, 150);
                 return;
             }
 
             const map = window.L.map('agent-map').setView([-23.5489, -46.6388], 12);
+            mapContainer.dataset.mapReady = 'true';
 
             window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -276,6 +281,13 @@
                     marker.openPopup();
                 });
             });
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAgentMap, { once: true });
+        } else {
+            initializeAgentMap();
+        }
+        document.addEventListener('livewire:navigated', initializeAgentMap);
     </script>
 </x-app-layout>

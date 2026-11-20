@@ -43,6 +43,7 @@
             'urgent' => ['label' => 'Urgente', 'color' => '#ef4444'],
             'pending' => ['label' => 'Pendente', 'color' => '#fbbf24'],
             'analysis' => ['label' => 'Em análise', 'color' => '#0ea5e9'],
+            'in_progress' => ['label' => 'Em andamento', 'color' => '#2563eb'],
             'resolved' => ['label' => 'Resolvida', 'color' => '#10b981'],
         ];
         $pdfTrendData = collect($dailyStatusCounts)->all();
@@ -107,8 +108,10 @@
         <div class="card">Total<strong>{{ $summary['total'] }}</strong></div>
         <div class="card">Pendentes<strong>{{ $summary['pending'] }}</strong></div>
         <div class="card">Em análise<strong>{{ $summary['analysis'] }}</strong></div>
+        <div class="card">Em andamento<strong>{{ $summary['in_progress'] }}</strong></div>
         <div class="card">Resolvidas<strong>{{ $summary['resolved'] }}</strong></div>
         <div class="card">Urgentes<strong>{{ $summary['urgent'] }}</strong></div>
+        <div class="card">Normais<strong>{{ $summary['normal'] }}</strong></div>
     </div>
 
     <div class="columns">
@@ -130,6 +133,7 @@
         Legenda: <span style="color:#ef4444">● Urgente</span>&nbsp;&nbsp;
         <span style="color:#fbbf24">● Pendente</span>&nbsp;&nbsp;
         <span style="color:#0ea5e9">● Em análise</span>&nbsp;&nbsp;
+        <span style="color:#2563eb">● Em andamento</span>&nbsp;&nbsp;
         <span style="color:#10b981">● Resolvida</span>
     </p>
 
@@ -181,7 +185,7 @@
 
     <h2>Evolução diária por status</h2>
     <table>
-        <thead><tr><th>Data</th><th>Urgente</th><th>Pendente</th><th>Em análise</th><th>Resolvida</th></tr></thead>
+        <thead><tr><th>Data</th><th>Urgente</th><th>Pendente</th><th>Em análise</th><th>Em andamento</th><th>Resolvida</th></tr></thead>
         <tbody>
             @forelse ($dailyStatusCounts as $date => $counts)
                 <tr>
@@ -189,10 +193,11 @@
                     <td>{{ $counts['urgent'] ?? 0 }}</td>
                     <td>{{ $counts['pending'] ?? 0 }}</td>
                     <td>{{ $counts['analysis'] ?? 0 }}</td>
+                    <td>{{ $counts['in_progress'] ?? 0 }}</td>
                     <td>{{ $counts['resolved'] ?? 0 }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">Nenhuma evolução encontrada no período.</td></tr>
+                <tr><td colspan="6">Nenhuma evolução encontrada no período.</td></tr>
             @endforelse
         </tbody>
     </table>

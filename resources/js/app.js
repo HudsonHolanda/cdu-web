@@ -67,6 +67,8 @@ const setupOverviewFilters = () => {
         all: 'Todas as denúncias',
         pending: 'Denúncias pendentes',
         analysis: 'Denúncias em análise',
+        in_progress: 'Denúncias em andamento',
+        normal: 'Denúncias normais',
         resolved: 'Denúncias resolvidas',
         urgent: 'Denúncias urgentes',
     };
@@ -84,13 +86,14 @@ const setupOverviewFilters = () => {
                 <td class="px-3 py-3">${escapeHtml(complaint.location)}</td>
                 <td class="px-3 py-3">${escapeHtml(complaint.date)}</td>
                 <td class="px-3 py-3"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">${escapeHtml(complaint.priority)}</span></td>
-                <td class="px-3 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${complaint.filter === 'resolved' ? 'bg-emerald-100 text-emerald-700' : complaint.filter === 'analysis' ? 'bg-sky-100 text-sky-700' : complaint.filter === 'urgent' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">${escapeHtml(complaint.status)}</span></td>
+                <td class="px-3 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${complaint.filter === 'resolved' ? 'bg-emerald-100 text-emerald-700' : complaint.filter === 'analysis' ? 'bg-sky-100 text-sky-700' : complaint.filter === 'in_progress' ? 'bg-blue-100 text-blue-700' : complaint.filter === 'urgent' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">${escapeHtml(complaint.status)}</span></td>
             </tr>
         `).join('');
         empty.classList.toggle('hidden', filtered.length > 0);
         document.querySelectorAll('[data-overview-filter]').forEach((button) => {
             button.setAttribute('aria-expanded', String(button.dataset.overviewFilter === filter));
         });
+        window.dispatchEvent(new CustomEvent('overview-map-filter', { detail: { filter } }));
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
@@ -115,8 +118,10 @@ const setupDashboardTable = () => {
         all: 'Todas as denúncias',
         pending: 'Denúncias pendentes',
         analysis: 'Denúncias em análise',
+        in_progress: 'Denúncias em andamento',
         resolved: 'Denúncias resolvidas',
         urgent: 'Denúncias urgentes',
+        normal: 'Denúncias normais',
     };
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
@@ -128,6 +133,8 @@ const setupDashboardTable = () => {
 
         const status = String(complaint.status || '').toLowerCase();
         if (filter === 'analysis') return status.includes('anál') || status.includes('anali');
+        if (filter === 'in_progress') return status.includes('andamento');
+        if (filter === 'normal') return !Boolean(complaint.highPriority) && complaint.priority !== 'Urgente';
         if (filter === 'resolved') return status.includes('resolv') || status.includes('conclu');
         return status.includes('pendent');
     };
@@ -136,6 +143,7 @@ const setupDashboardTable = () => {
         const normalized = String(status || '').toLowerCase();
         if (normalized.includes('resolv') || normalized.includes('conclu')) return 'bg-emerald-100 text-emerald-700';
         if (normalized.includes('anál') || normalized.includes('anali')) return 'bg-sky-100 text-sky-700';
+        if (normalized.includes('andamento')) return 'bg-blue-100 text-blue-700';
         if (normalized.includes('pendent')) return 'bg-amber-100 text-amber-700';
         return 'bg-rose-100 text-rose-700';
     };
@@ -150,7 +158,7 @@ const setupDashboardTable = () => {
                 <td class="px-3 py-3">${escapeHtml(complaint.date)}</td>
                 <td class="px-3 py-3"><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">${escapeHtml(complaint.priority)}</span></td>
                 <td class="px-3 py-3"><span class="rounded-full px-2 py-1 text-xs font-medium ${statusClass(complaint.status)}">${escapeHtml(complaint.status)}</span></td>
-                <td class="px-3 py-3"><button type="button" class="text-sm font-medium text-slate-700 hover:text-slate-900">Ver</button></td>
+                <td class="px-3 py-3"><a href="/denuncias/detalhe/${encodeURIComponent(complaint.publicId || '')}" class="text-sm font-medium text-slate-700 hover:text-slate-900">Ver</a></td>
             </tr>
         `).join('');
         title.textContent = labels[filter] || labels.all;

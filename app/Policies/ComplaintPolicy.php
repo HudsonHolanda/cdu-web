@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\ComplaintStatus;
 use App\Enums\UserRole;
 use App\Models\Complaint;
 use App\Models\User;
@@ -16,9 +15,7 @@ class ComplaintPolicy
 
     public function update(User $user, Complaint $complaint): bool
     {
-        return $user->hasRole(UserRole::AGENT)
-            || ((int) $complaint->id_user === (int) $user->id_user
-                && $complaint->status === ComplaintStatus::PENDING);
+        return $user->hasRole(UserRole::AGENT);
     }
 
     public function delete(User $user, Complaint $complaint): bool
@@ -27,11 +24,7 @@ class ComplaintPolicy
             return true;
         }
 
-        if ((int) $complaint->id_user !== (int) $user->id_user) {
-            return false;
-        }
-
-        return $user->role === UserRole::AGENT || $complaint->status === ComplaintStatus::PENDING;
+        return $user->hasRole(UserRole::AGENT);
     }
 
     public function manageStatus(User $user): bool

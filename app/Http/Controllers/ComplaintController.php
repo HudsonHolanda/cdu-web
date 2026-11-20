@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ComplaintStatus;
+use App\Enums\ComplaintDeletionRequestStatus;
+use App\Enums\ComplaintUpdateRequestStatus;
 use App\Enums\UserRole;
 use App\Models\Complaint;
+use App\Models\ComplaintDeletionRequest;
+use App\Models\ComplaintUpdateRequest;
 use App\Models\ComplaintImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,14 +44,23 @@ class ComplaintController extends Controller
         }
         $complaints = collect($items);
 
-        return view('complaints.index', compact('complaints', 'search'));
+        return view('complaints.index', [
+            'complaints' => $complaints,
+            'search' => $search,
+            'pendingDeletionRequests' => $this->pendingDeletionRequests($request),
+            'pendingUpdateRequests' => $this->pendingUpdateRequests($request),
+        ]);
     }
 
     public function mine(Request $request)
     {
         $search = trim((string) $request->query('busca', ''));
         $query = Complaint::query()
-            ->with('images')
+            ->with([
+                'images',
+                'deletionRequests' => fn ($query) => $query->latest(),
+                'updateRequests' => fn ($query) => $query->latest(),
+            ])
             ->where('id_user', $request->user()->id_user)
             ->latest();
 
@@ -81,6 +94,210 @@ class ComplaintController extends Controller
     public function create()
     {
         return view('complaints.create', ['categories' => self::CATEGORIES]);
+    }
+
+    public function createDeletionRequest(Request $request, Complaint $complaint)
+    {
+        abort_unless((int) $complaint->id_user === (int) $request->user()->id_user, 403);
+
+        $hasPendingRequest = $complaint->deletionRequests()
+            ->where('requested_by', $request->user()->id_user)
+            ->where('status', ComplaintDeletionRequestStatus::PENDING)
+            ->exists();
+
+        if ($hasPendingRequest) {
+            return redirect()->route('complaints.mine')->with('success', 'Já existe uma solicitação de exclusão pendente para esta denúncia.');
+        }
+
+        return view('complaints.deletion-request', [
+            'complaint' => $this->toViewData($complaint->load('images')),
+        ]);
+    }
+
+    public function createUpdateRequest(Request $request, Complaint $complaint)
+    {
+        abort_unless((int) $complaint->id_user === (int) $request->user()->id_user, 403);
+
+        $hasPendingRequest = $complaint->updateRequests()
+            ->where('requested_by', $request->user()->id_user)
+            ->where('status', ComplaintUpdateRequestStatus::PENDING)
+            ->exists();
+
+        if ($hasPendingRequest) {
+            return redirect()->route('complaints.mine')->with('success', 'Já existe uma solicitação de alteração pendente para esta denúncia.');
+        }
+
+        return view('complaints.update-request', [
+            'complaint' => $this->toViewData($complaint->load('images')),
+            'categories' => self::CATEGORIES,
+        ]);
+    }
+
+    public function storeDeletionRequest(Request $request, Complaint $complaint)
+    {
+        abort_unless((int) $complaint->id_user === (int) $request->user()->id_user, 403);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        $hasPendingRequest = $complaint->deletionRequests()
+            ->where('requested_by', $request->user()->id_user)
+            ->where('status', ComplaintDeletionRequestStatus::PENDING)
+            ->exists();
+
+        if ($hasPendingRequest) {
+            return back()->withInput()->withErrors(['reason' => 'Já existe uma solicitação pendente para esta denúncia.']);
+        }
+
+        ComplaintDeletionRequest::create([
+            'complaint_id' => $complaint->complaint_id,
+            'requested_by' => $request->user()->id_user,
+            'reason' => $validated['reason'],
+            'status' => ComplaintDeletionRequestStatus::PENDING,
+        ]);
+
+        return redirect()->route('complaints.mine')->with('success', 'Solicitação de exclusão enviada para análise.');
+    }
+
+    public function storeUpdateRequest(Request $request, Complaint $complaint)
+    {
+        abort_unless((int) $complaint->id_user === (int) $request->user()->id_user, 403);
+
+        $validated = $request->validate([
+            'category' => ['required', 'string', Rule::in(self::CATEGORIES)],
+            'title' => ['required', 'string', 'min:8', 'max:120'],
+            'description' => ['required', 'string', 'min:20', 'max:2000'],
+            'address' => ['required', 'string', 'max:180'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'cep' => ['nullable', 'string', 'max:9', 'regex:/^\d{5}-?\d{3}$/'],
+            'complement' => ['nullable', 'string', 'max:160'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        $hasPendingRequest = $complaint->updateRequests()
+            ->where('requested_by', $request->user()->id_user)
+            ->where('status', ComplaintUpdateRequestStatus::PENDING)
+            ->exists();
+
+        if ($hasPendingRequest) {
+            return back()->withInput()->withErrors(['reason' => 'Já existe uma solicitação pendente para esta denúncia.']);
+        }
+
+        ComplaintUpdateRequest::create([
+            'complaint_id' => $complaint->complaint_id,
+            'requested_by' => $request->user()->id_user,
+            'changes' => [
+                'category' => $validated['category'],
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'address' => $validated['address'],
+                'district' => $validated['district'] ?? null,
+                'cep' => isset($validated['cep']) ? str_replace('-', '', $validated['cep']) : null,
+                'complement' => $validated['complement'] ?? null,
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+            ],
+            'reason' => $validated['reason'],
+            'status' => ComplaintUpdateRequestStatus::PENDING,
+        ]);
+
+        return redirect()->route('complaints.mine')->with('success', 'Solicitação de alteração enviada para análise.');
+    }
+
+    public function deletionRequests(Request $request)
+    {
+        abort_unless($request->user()->hasRole(UserRole::AGENT), 403);
+
+        return view('complaints.deletion-requests', [
+            'deletionRequests' => ComplaintDeletionRequest::query()
+                ->with(['complaint', 'requester'])
+                ->where('status', ComplaintDeletionRequestStatus::PENDING)
+                ->latest()
+                ->get(),
+            'updateRequests' => ComplaintUpdateRequest::query()
+                ->with(['complaint', 'requester'])
+                ->where('status', ComplaintUpdateRequestStatus::PENDING)
+                ->latest()
+                ->get(),
+        ]);
+    }
+
+    public function reviewDeletionRequest(Request $request, ComplaintDeletionRequest $deletionRequest)
+    {
+        abort_unless($request->user()->hasRole(UserRole::AGENT), 403);
+
+        $validated = $request->validate([
+            'decision' => ['required', Rule::in([
+                ComplaintDeletionRequestStatus::APPROVED->value,
+                ComplaintDeletionRequestStatus::REJECTED->value,
+            ])],
+            'reviewer_reason' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
+        $paths = [];
+        DB::transaction(function () use ($request, $deletionRequest, $validated, &$paths): void {
+            $requestModel = ComplaintDeletionRequest::query()->lockForUpdate()->findOrFail($deletionRequest->getKey());
+            abort_if($requestModel->status !== ComplaintDeletionRequestStatus::PENDING, 422, 'Esta solicitação já foi analisada.');
+
+            $complaint = $requestModel->complaint()->with('images')->first();
+            if ($validated['decision'] === ComplaintDeletionRequestStatus::APPROVED->value && $complaint) {
+                $paths = $complaint->images->map(fn (ComplaintImage $image): array => [$image->disk, $image->path])->all();
+                if ($complaint->image_url) {
+                    $paths[] = [config('filesystems.default'), $complaint->image_url];
+                }
+                $complaint->delete();
+            }
+
+            $requestModel->update([
+                'status' => $validated['decision'],
+                'reviewed_by' => $request->user()->id_user,
+                'reviewer_reason' => $validated['reviewer_reason'],
+                'reviewed_at' => now(),
+            ]);
+        });
+
+        foreach ($paths as [$disk, $path]) {
+            Storage::disk($disk)->delete($path);
+        }
+
+        return redirect()->route('complaints.deletion-requests')->with('success', 'Solicitação analisada com sucesso.');
+    }
+
+    public function reviewUpdateRequest(Request $request, ComplaintUpdateRequest $updateRequest)
+    {
+        abort_unless($request->user()->hasRole(UserRole::AGENT), 403);
+
+        $validated = $request->validate([
+            'decision' => ['required', Rule::in([
+                ComplaintUpdateRequestStatus::APPROVED->value,
+                ComplaintUpdateRequestStatus::REJECTED->value,
+            ])],
+            'reviewer_reason' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($request, $updateRequest, $validated): void {
+            $requestModel = ComplaintUpdateRequest::query()->lockForUpdate()->findOrFail($updateRequest->getKey());
+            abort_if($requestModel->status !== ComplaintUpdateRequestStatus::PENDING, 422, 'Esta solicitação já foi analisada.');
+
+            if ($validated['decision'] === ComplaintUpdateRequestStatus::APPROVED->value && $requestModel->complaint) {
+                foreach ($requestModel->changes as $field => $value) {
+                    $requestModel->complaint->{$field} = $value;
+                }
+                $requestModel->complaint->save();
+            }
+
+            $requestModel->update([
+                'status' => $validated['decision'],
+                'reviewed_by' => $request->user()->id_user,
+                'reviewer_reason' => $validated['reviewer_reason'],
+                'reviewed_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('complaints.deletion-requests')->with('success', 'Solicitação de alteração analisada com sucesso.');
     }
 
     public function edit(Complaint $complaint)
@@ -170,6 +387,9 @@ class ComplaintController extends Controller
     public function update(Request $request, Complaint $complaint)
     {
         $this->authorize('update', $complaint);
+        $statusWillBeFinalized = $request->filled('status')
+            && (int) $request->input('status') !== $complaint->status?->value
+            && in_array((int) $request->input('status'), [ComplaintStatus::RESOLVED->value, ComplaintStatus::REJECTED->value], true);
 
         $validated = $request->validate([
             'category' => ['sometimes', 'required', 'string', Rule::in(self::CATEGORIES)],
@@ -181,6 +401,9 @@ class ComplaintController extends Controller
             'complement' => ['sometimes', 'nullable', 'string', 'max:160'],
             'latitude' => ['sometimes', 'required', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'required', 'numeric', 'between:-180,180'],
+            'status' => [$request->user()->hasRole(UserRole::AGENT) ? 'sometimes' : 'prohibited', 'integer', Rule::in(array_map(fn (ComplaintStatus $status) => $status->value, ComplaintStatus::cases()))],
+            'high_priority' => [$request->user()->hasRole(UserRole::AGENT) ? 'sometimes' : 'prohibited', 'boolean'],
+            'status_justification' => ['nullable', 'string', 'max:1000', Rule::requiredIf($statusWillBeFinalized)],
             'photos' => ['sometimes', 'array', 'max:5'],
             'photos.*' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
@@ -192,6 +415,7 @@ class ComplaintController extends Controller
             return back()->withInput()->withErrors(['photos' => 'O relato pode ter no máximo cinco imagens.']);
         }
 
+        $fromStatus = $complaint->status?->value;
         foreach (['category', 'title', 'description', 'address', 'district', 'complement', 'latitude', 'longitude'] as $field) {
             if (array_key_exists($field, $validated)) {
                 $complaint->{$field} = $validated[$field];
@@ -200,10 +424,16 @@ class ComplaintController extends Controller
         if (array_key_exists('cep', $validated)) {
             $complaint->cep = str_replace('-', '', (string) $validated['cep']);
         }
+        if (array_key_exists('status', $validated)) {
+            $complaint->status = ComplaintStatus::from((int) $validated['status']);
+        }
+        if (array_key_exists('high_priority', $validated)) {
+            $complaint->high_priority = (bool) $validated['high_priority'];
+        }
         $disk = config('filesystems.default');
         $paths = [];
         try {
-            DB::transaction(function () use ($request, $complaint, $disk, &$paths) {
+            DB::transaction(function () use ($request, $complaint, $disk, &$paths, $fromStatus, $validated): void {
                 foreach ($request->file('photos', []) as $photo) {
                     $path = $photo->store('complaints/'.$complaint->complaint_id, $disk);
                     if (! $path) {
@@ -219,6 +449,18 @@ class ComplaintController extends Controller
                     $complaint->image_url = $paths[0];
                 }
                 $complaint->save();
+
+                if ($fromStatus !== $complaint->status?->value) {
+                    DB::table('complaint_status_histories')->insert([
+                        'complaint_id' => $complaint->complaint_id,
+                        'from_status' => $fromStatus,
+                        'to_status' => $complaint->status?->value,
+                        'justification' => $validated['status_justification'] ?? null,
+                        'changed_by' => $request->user()->id_user,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             });
         } catch (\Throwable $exception) {
             foreach ($paths as $path) {
@@ -233,9 +475,12 @@ class ComplaintController extends Controller
     public function updateStatus(Request $request, Complaint $complaint)
     {
         abort_unless($request->user()->hasRole(UserRole::AGENT), 403);
+        $statusWillBeFinalized = (int) $request->input('status') !== $complaint->status?->value
+            && in_array((int) $request->input('status'), [ComplaintStatus::RESOLVED->value, ComplaintStatus::REJECTED->value], true);
         $validated = $request->validate([
             'status' => ['required', 'integer', Rule::in(array_map(fn (ComplaintStatus $status) => $status->value, ComplaintStatus::cases()))],
             'high_priority' => ['sometimes', 'boolean'],
+            'status_justification' => ['nullable', 'string', 'max:1000', Rule::requiredIf($statusWillBeFinalized)],
         ]);
 
         DB::transaction(function () use ($request, $complaint, $validated) {
@@ -252,6 +497,7 @@ class ComplaintController extends Controller
                     'complaint_id' => $complaint->complaint_id,
                     'from_status' => $from,
                     'to_status' => $to->value,
+                    'justification' => $validated['status_justification'] ?? null,
                     'changed_by' => $request->user()->id_user,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -355,6 +601,12 @@ class ComplaintController extends Controller
         }
         $filenames = array_map(fn (string $path) => basename($path), $paths);
         $status = $complaint->status?->label() ?? 'Em aberto';
+        $latestDeletionRequest = $complaint->relationLoaded('deletionRequests')
+            ? $complaint->deletionRequests->sortByDesc('created_at')->first()
+            : null;
+        $latestUpdateRequest = $complaint->relationLoaded('updateRequests')
+            ? $complaint->updateRequests->sortByDesc('created_at')->first()
+            : null;
 
         return [
             'complaintId' => $complaint->complaint_id,
@@ -366,7 +618,11 @@ class ComplaintController extends Controller
             'imageUrl' => $filenames[0] ?? '',
             'attachments' => $filenames,
             'status' => $status,
+            'statusValue' => $complaint->status?->value ?? ComplaintStatus::PENDING->value,
             'highPriority' => (bool) $complaint->high_priority,
+            'deletionRequestStatus' => $latestDeletionRequest?->status?->value,
+            'updateRequestStatus' => $latestUpdateRequest?->status?->value,
+            'statusJustification' => $this->latestStatusJustification($complaint),
             'createdAt' => $complaint->created_at?->toIso8601String(),
             'location' => [
                 'latitude' => (float) $complaint->latitude,
@@ -377,5 +633,41 @@ class ComplaintController extends Controller
                 'complement' => $complaint->complement ?? '',
             ],
         ];
+    }
+
+    private function latestStatusJustification(Complaint $complaint): ?string
+    {
+        return DB::table('complaint_status_histories')
+            ->where('complaint_id', $complaint->complaint_id)
+            ->whereIn('to_status', [ComplaintStatus::RESOLVED->value, ComplaintStatus::REJECTED->value])
+            ->whereNotNull('justification')
+            ->latest('id')
+            ->value('justification');
+    }
+
+    private function pendingDeletionRequests(Request $request)
+    {
+        if (! $request->user()->hasRole(UserRole::AGENT)) {
+            return collect();
+        }
+
+        return ComplaintDeletionRequest::query()
+            ->with(['complaint', 'requester'])
+            ->where('status', ComplaintDeletionRequestStatus::PENDING)
+            ->latest()
+            ->get();
+    }
+
+    private function pendingUpdateRequests(Request $request)
+    {
+        if (! $request->user()->hasRole(UserRole::AGENT)) {
+            return collect();
+        }
+
+        return ComplaintUpdateRequest::query()
+            ->with(['complaint', 'requester'])
+            ->where('status', ComplaintUpdateRequestStatus::PENDING)
+            ->latest()
+            ->get();
     }
 }

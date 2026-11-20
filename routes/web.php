@@ -36,6 +36,13 @@ Route::middleware(['auth'])->prefix('denuncias')->name('complaints.')->group(fun
     Route::post('/', [ComplaintController::class, 'store'])->name('store');
     Route::get('/detalhe/{publicId}', [ComplaintController::class, 'show'])->name('show');
     Route::get('/imagens/{filename}', [ComplaintController::class, 'image'])->name('image');
+    Route::get('/solicitacoes-exclusao', [ComplaintController::class, 'deletionRequests'])->name('deletion-requests');
+    Route::patch('/solicitacoes-exclusao/{deletionRequest}', [ComplaintController::class, 'reviewDeletionRequest'])->name('deletion-requests.review');
+    Route::get('/{complaint}/solicitar-exclusao', [ComplaintController::class, 'createDeletionRequest'])->name('deletion-requests.create');
+    Route::post('/{complaint}/solicitar-exclusao', [ComplaintController::class, 'storeDeletionRequest'])->name('deletion-requests.store');
+    Route::patch('/solicitacoes-alteracao/{updateRequest}', [ComplaintController::class, 'reviewUpdateRequest'])->name('update-requests.review');
+    Route::get('/{complaint}/solicitar-alteracao', [ComplaintController::class, 'createUpdateRequest'])->name('update-requests.create');
+    Route::post('/{complaint}/solicitar-alteracao', [ComplaintController::class, 'storeUpdateRequest'])->name('update-requests.store');
     Route::get('/{complaint}/editar', [ComplaintController::class, 'edit'])->name('edit');
     Route::put('/{complaint}', [ComplaintController::class, 'update'])->name('update');
     Route::patch('/{complaint}/status', [ComplaintController::class, 'updateStatus'])->name('status');
