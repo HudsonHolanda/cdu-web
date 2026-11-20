@@ -46,6 +46,7 @@
             'in_progress' => ['label' => 'Em andamento', 'color' => '#2563eb'],
             'resolved' => ['label' => 'Resolvida', 'color' => '#10b981'],
         ];
+        $pdfTrendPeriod = $trendPeriod ?? 'week';
         $pdfTrendData = collect($dailyStatusCounts)->all();
         $pdfTrendDates = collect($dailyStatusCounts)->keys()->values();
         $pdfTrendMax = max(1, (int) collect($dailyStatusCounts)->flatMap(fn ($counts) => array_values($counts))->max());
@@ -100,8 +101,12 @@
     <h1>Dashboard de denúncias</h1>
     <p class="muted">
         Gerado em {{ now()->format('d/m/Y H:i') }}.
-        Período: {{ ($filters['start_date'] ?? null) ? \Illuminate\Support\Carbon::parse($filters['start_date'])->format('d/m/Y') : 'início' }}
-        até {{ ($filters['end_date'] ?? null) ? \Illuminate\Support\Carbon::parse($filters['end_date'])->format('d/m/Y') : 'hoje' }}.
+        @if (($filters['period'] ?? null) === 'day' && ($filters['date'] ?? null))
+            Data: {{ \Illuminate\Support\Carbon::parse($filters['date'])->format('d/m/Y') }}.
+        @else
+            Período: {{ ($filters['start_date'] ?? null) ? \Illuminate\Support\Carbon::parse($filters['start_date'])->format('d/m/Y') : 'início' }}
+            até {{ ($filters['end_date'] ?? null) ? \Illuminate\Support\Carbon::parse($filters['end_date'])->format('d/m/Y') : 'hoje' }}.
+        @endif
     </p>
 
     <div class="summary">
@@ -183,13 +188,13 @@
         </div>
     </div>
 
-    <h2>Evolução diária por status</h2>
+    <h2>Evolução por {{ ['day' => 'dia', 'week' => 'semana', 'month' => 'mês', 'year' => 'ano'][$pdfTrendPeriod] ?? 'semana' }} por status</h2>
     <table>
-        <thead><tr><th>Data</th><th>Urgente</th><th>Pendente</th><th>Em análise</th><th>Em andamento</th><th>Resolvida</th></tr></thead>
+        <thead><tr><th>Período</th><th>Urgente</th><th>Pendente</th><th>Em análise</th><th>Em andamento</th><th>Resolvida</th></tr></thead>
         <tbody>
             @forelse ($dailyStatusCounts as $date => $counts)
                 <tr>
-                    <td>{{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</td>
+                    <td>{{ $pdfTrendPeriod === 'year' ? $date : ($pdfTrendPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/Y') : ($pdfTrendPeriod === 'week' ? 'Semana de '.\Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : \Illuminate\Support\Carbon::parse($date)->format('d/m/Y'))) }}</td>
                     <td>{{ $counts['urgent'] ?? 0 }}</td>
                     <td>{{ $counts['pending'] ?? 0 }}</td>
                     <td>{{ $counts['analysis'] ?? 0 }}</td>

@@ -24,10 +24,12 @@ class BackofficeController extends Controller
     {
         $allComplaints = $this->complaints();
         $complaints = $this->filterDashboardComplaints($allComplaints, $request);
+        $trendPeriod = $this->dashboardTrendPeriod($request);
+        $dashboardFilters = $this->dashboardFilters($request);
 
         return view('agents.dashboard', [
-            ...$this->panelData($complaints),
-            'dashboardFilters' => $request->only(['start_date', 'end_date', 'category', 'status']),
+            ...$this->panelData($complaints, $trendPeriod),
+            'dashboardFilters' => $dashboardFilters,
             'dashboardCategories' => collect([
                 'Buraco na via',
                 'Iluminação pública',
@@ -42,7 +44,9 @@ class BackofficeController extends Controller
     public function agentDashboardPdf(Request $request)
     {
         $complaints = $this->filterDashboardComplaints($this->complaints(), $request);
-        $panelData = $this->panelData($complaints);
+        $trendPeriod = $this->dashboardTrendPeriod($request);
+        $panelData = $this->panelData($complaints, $trendPeriod);
+        $dashboardFilters = $this->dashboardFilters($request);
 
         return Pdf::loadView('agents.dashboard-pdf', [
             'rows' => $this->dashboardRows($complaints),
@@ -59,7 +63,8 @@ class BackofficeController extends Controller
             'statusCounts' => $panelData['statusCounts'],
             'districtCounts' => $panelData['districtCounts'],
             'dailyStatusCounts' => $panelData['dailyStatusCounts'],
-            'filters' => $request->only(['start_date', 'end_date', 'category', 'status']),
+            'filters' => $dashboardFilters,
+            'trendPeriod' => $trendPeriod,
         ])->setPaper('a4', 'landscape')->download('dashboard-denuncias-'.now()->format('Y-m-d').'.pdf');
     }
 
@@ -182,8 +187,8 @@ class BackofficeController extends Controller
 
     private function filterDashboardComplaints(Collection $complaints, Request $request): Collection
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date') ?: now()->startOfYear()->toDateString();
+        $endDate = $request->input('end_date') ?: now()->toDateString();
         $category = $request->input('category');
         $status = $request->input('status');
 
@@ -220,7 +225,7 @@ class BackofficeController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function panelData(Collection $complaints): array
+    private function panelData(Collection $complaints, string $trendPeriod = 'day'): array
     {
         $statusCount = fn (ComplaintStatus $status): int => $complaints->where('_status', $status)->count();
 
@@ -258,19 +263,49 @@ class BackofficeController extends Controller
                 ->groupBy(fn (array $complaint): string => substr($complaint['createdAt'], 0, 10))
                 ->map->count()
                 ->sortKeys(),
-            'dailyStatusCounts' => $complaints
-                ->filter(fn (array $complaint): bool => filled($complaint['createdAt']))
-                ->groupBy(fn (array $complaint): string => substr($complaint['createdAt'], 0, 10))
-                ->sortKeys()
-                ->map(fn (Collection $day): array => [
-                    'urgent' => $day->where('highPriority', true)->count(),
-                    'pending' => $day->where('_status', ComplaintStatus::PENDING)->count(),
-                    'analysis' => $day->where('_status', ComplaintStatus::UNDER_REVIEW)->count(),
-                    'in_progress' => $day->where('_status', ComplaintStatus::IN_PROGRESS)->count(),
-                    'resolved' => $day->where('_status', ComplaintStatus::RESOLVED)->count(),
-                ]),
+            'dailyStatusCounts' => $this->trendStatusCounts($complaints, $trendPeriod),
             'totalComplaints' => $complaints->count(),
         ];
+    }
+
+    private function dashboardTrendPeriod(Request $request): string
+    {
+        return 'month';
+    }
+
+    /** @return array<string, mixed> */
+    private function dashboardFilters(Request $request): array
+    {
+        return [
+            'period' => 'month',
+            'start_date' => $request->input('start_date') ?: now()->startOfYear()->toDateString(),
+            'end_date' => $request->input('end_date') ?: now()->toDateString(),
+            ...$request->only(['category', 'status']),
+        ];
+    }
+
+    private function trendStatusCounts(Collection $complaints, string $period): Collection
+    {
+        return $complaints
+            ->filter(fn (array $complaint): bool => filled($complaint['createdAt']))
+            ->groupBy(function (array $complaint) use ($period): string {
+                $date = \Illuminate\Support\Carbon::parse($complaint['createdAt']);
+
+                return match ($period) {
+                    'week' => $date->startOfWeek()->format('Y-m-d'),
+                    'month' => $date->startOfMonth()->format('Y-m'),
+                    'year' => $date->startOfYear()->format('Y'),
+                    default => $date->format('Y-m-d'),
+                };
+            })
+            ->sortKeys()
+            ->map(fn (Collection $periodComplaints): array => [
+                'urgent' => $periodComplaints->where('highPriority', true)->count(),
+                'pending' => $periodComplaints->where('_status', ComplaintStatus::PENDING)->count(),
+                'analysis' => $periodComplaints->where('_status', ComplaintStatus::UNDER_REVIEW)->count(),
+                'in_progress' => $periodComplaints->where('_status', ComplaintStatus::IN_PROGRESS)->count(),
+                'resolved' => $periodComplaints->where('_status', ComplaintStatus::RESOLVED)->count(),
+            ]);
     }
 
     private function statusColor(Complaint $complaint): string

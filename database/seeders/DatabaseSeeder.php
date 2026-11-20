@@ -23,7 +23,12 @@ class DatabaseSeeder extends Seeder
             ['Agente de Teste', 'agente@example.com', UserRole::AGENT],
             ['Admin de Teste', 'admin@example.com', UserRole::ADMIN],
         ] as [$name, $email, $role]) {
-            User::factory()->create(['name' => $name, 'email' => $email, 'role' => $role]);
+            User::query()->updateOrCreate(
+                ['email' => $email],
+                ['name' => $name, 'role' => $role, 'password' => 'password'],
+            );
         }
+
+        $this->call(ComplaintSeeder::class);
     }
 }

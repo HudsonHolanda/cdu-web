@@ -19,7 +19,9 @@
         ];
 
         $dashboardComplaints = collect($complaints ?? [])->values();
-        $dashboardBaseFilters = collect($dashboardFilters ?? [])->except('status')->all();
+        $dashboardFilters = $dashboardFilters ?? [];
+        $dashboardPeriod = 'month';
+        $dashboardBaseFilters = collect($dashboardFilters)->except('status')->all();
 
         $metrics = collect($panelMetrics ?? $metrics)->map(fn ($metric) => [
             ...$metric,
@@ -236,9 +238,7 @@
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div class="mb-5 flex items-center justify-between">
                             <h2 class="text-xl font-semibold text-slate-900">Evolução das denúncias</h2>
-                            <select class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                                <option>Por dia</option>
-                            </select>
+                            <span class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">Por mês</span>
                         </div>
 
                         @php
@@ -289,14 +289,14 @@
                                                 $y = $chartTop + $plotHeight - (($value / $trendMax) * $plotHeight);
                                             @endphp
                                             <circle cx="{{ $x }}" cy="{{ $y }}" r="4.5" fill="white" stroke="{{ $series['color'] }}" stroke-width="3">
-                                                <title>{{ $series['label'] }}: {{ $value }} em {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</title>
+                                                <title>{{ $series['label'] }}: {{ $value }} em {{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/Y') : ($dashboardPeriod === 'week' ? 'semana de '.\Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : \Illuminate\Support\Carbon::parse($date)->format('d/m/Y'))) }}</title>
                                             </circle>
                                         @endforeach
                                     @endforeach
 
                                     @foreach ($trendDates as $dateIndex => $date)
                                         @php $x = $trendDates->count() === 1 ? $chartLeft + ($plotWidth / 2) : $chartLeft + (($plotWidth / ($trendDates->count() - 1)) * $dateIndex); @endphp
-                                        <text x="{{ $x }}" y="{{ $chartHeight - 8 }}" text-anchor="middle" fill="#64748b" font-size="11">{{ \Illuminate\Support\Carbon::parse($date)->format('d/m') }}</text>
+                                        <text x="{{ $x }}" y="{{ $chartHeight - 8 }}" text-anchor="middle" fill="#64748b" font-size="11">{{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/Y') : ($dashboardPeriod === 'week' ? \Illuminate\Support\Carbon::parse($date)->format('d/m') : \Illuminate\Support\Carbon::parse($date)->format('d/m'))) }}</text>
                                     @endforeach
                                 </svg>
                             </div>
