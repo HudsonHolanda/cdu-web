@@ -19,13 +19,18 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         foreach ([
-            ['Cidadão de Teste', 'cidadao@example.com', UserRole::CITIZEN],
-            ['Agente de Teste', 'agente@example.com', UserRole::AGENT],
-            ['Admin de Teste', 'admin@example.com', UserRole::ADMIN],
-        ] as [$name, $email, $role]) {
+            ['Cidadão de Teste', 'cidadao@example.com', '52998224725', UserRole::CITIZEN],
+            ['Agente de Teste', 'agente@example.com', '11144477735', UserRole::AGENT],
+            ['Admin de Teste', 'admin@example.com', '93541134780', UserRole::ADMIN],
+        ] as [$name, $email, $cpf, $role]) {
             User::query()->updateOrCreate(
                 ['email' => $email],
-                ['name' => $name, 'role' => $role, 'password' => 'password'],
+                [
+                    'name' => $name,
+                    'cpf' => $cpf,
+                    'role' => $role,
+                    'password' => 'password',
+                ],
             );
         }
 
