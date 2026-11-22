@@ -136,7 +136,7 @@
                                 </select>
                             </label>
                             <button type="submit" class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-medium text-white">Filtrar</button>
-                            <a href="{{ route('agent.dashboard') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">Limpar</a>
+                            <a href="{{ route('agent.dashboard', ['all_dates' => 1]) }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">Limpar</a>
                             <a href="{{ route('agent.dashboard.pdf', $dashboardFilters ?? []) }}" class="rounded-xl border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-medium text-white">Exportar relatório</a>
                         </form>
                     </div>
@@ -277,14 +277,14 @@
                                                 $y = $chartTop + $plotHeight - (($value / $trendMax) * $plotHeight);
                                             @endphp
                                             <circle cx="{{ $x }}" cy="{{ $y }}" r="4.5" fill="white" stroke="{{ $series['color'] }}" stroke-width="3">
-                                                <title>{{ $series['label'] }}: {{ $value }} em {{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/Y') : ($dashboardPeriod === 'week' ? 'semana de '.\Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : \Illuminate\Support\Carbon::parse($date)->format('d/m/Y'))) }}</title>
+                                                <title>{{ $series['label'] }}: {{ $value }} em {{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/y') : ($dashboardPeriod === 'week' ? 'semana de '.\Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : \Illuminate\Support\Carbon::parse($date)->format('d/m/Y'))) }}</title>
                                             </circle>
                                         @endforeach
                                     @endforeach
 
                                     @foreach ($trendDates as $dateIndex => $date)
                                         @php $x = $trendDates->count() === 1 ? $chartLeft + ($plotWidth / 2) : $chartLeft + (($plotWidth / ($trendDates->count() - 1)) * $dateIndex); @endphp
-                                        <text x="{{ $x }}" y="{{ $chartHeight - 8 }}" text-anchor="middle" fill="#64748b" font-size="11">{{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/Y') : ($dashboardPeriod === 'week' ? \Illuminate\Support\Carbon::parse($date)->format('d/m') : \Illuminate\Support\Carbon::parse($date)->format('d/m'))) }}</text>
+                                        <text x="{{ $x }}" y="{{ $chartHeight - 8 }}" text-anchor="middle" fill="#64748b" font-size="11">{{ $dashboardPeriod === 'year' ? $date : ($dashboardPeriod === 'month' ? \Illuminate\Support\Carbon::parse($date.'-01')->format('m/y') : ($dashboardPeriod === 'week' ? \Illuminate\Support\Carbon::parse($date)->format('d/m') : \Illuminate\Support\Carbon::parse($date)->format('d/m'))) }}</text>
                                     @endforeach
                                 </svg>
                             </div>

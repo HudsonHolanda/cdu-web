@@ -30,7 +30,8 @@ class BackofficeController extends Controller
         $dashboardFilters = $this->dashboardFilters($request);
 
         $panelData = $this->panelData($complaints, $trendPeriod);
-        $panelData['panelMetrics'] = $this->panelData($allComplaints)['panelMetrics'];
+        $cardComplaints = $this->filterDashboardComplaints($allComplaints, $request, true);
+        $panelData['panelMetrics'] = $this->panelData($cardComplaints)['panelMetrics'];
 
         return view('agents.dashboard', [
             ...$panelData,
@@ -256,12 +257,13 @@ class BackofficeController extends Controller
         ];
     }
 
-    private function filterDashboardComplaints(Collection $complaints, Request $request): Collection
+    private function filterDashboardComplaints(Collection $complaints, Request $request, bool $ignoreStatus = false): Collection
     {
-        $startDate = $request->input('start_date') ?: now()->startOfYear()->toDateString();
-        $endDate = $request->input('end_date') ?: now()->toDateString();
+        $allDates = $request->boolean('all_dates');
+        $startDate = $allDates ? null : ($request->input('start_date') ?: now()->startOfYear()->toDateString());
+        $endDate = $allDates ? null : ($request->input('end_date') ?: now()->toDateString());
         $category = $request->input('category');
-        $status = $request->input('status');
+        $status = $ignoreStatus ? null : $request->input('status');
 
         return $complaints->filter(function (array $complaint) use ($startDate, $endDate, $category, $status): bool {
             $date = substr((string) $complaint['createdAt'], 0, 10);
@@ -365,11 +367,14 @@ class BackofficeController extends Controller
     /** @return array<string, mixed> */
     private function dashboardFilters(Request $request): array
     {
+        $allDates = $request->boolean('all_dates');
+
         return [
             'period' => 'month',
-            'start_date' => $request->input('start_date') ?: now()->startOfYear()->toDateString(),
-            'end_date' => $request->input('end_date') ?: now()->toDateString(),
+            'start_date' => $allDates ? null : ($request->input('start_date') ?: now()->startOfYear()->toDateString()),
+            'end_date' => $allDates ? null : ($request->input('end_date') ?: now()->toDateString()),
             ...$request->only(['category', 'status']),
+            ...($allDates ? ['all_dates' => true] : []),
         ];
     }
 
