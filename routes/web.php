@@ -4,9 +4,43 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\BackofficeController;
+use App\Enums\ComplaintStatus;
+use App\Models\Complaint;
 use Illuminate\Support\Facades\Storage;
 
-Route::view('/', 'home');
+Route::get('/', function () {
+    /** @var \Illuminate\Database\Eloquent\Collection<int, Complaint> $complaints */
+    $complaints = Complaint::query()
+        ->get(['latitude', 'longitude', 'district', 'status', 'high_priority']);
+    $total = $complaints->count();
+    $resolved = $complaints->where('status', ComplaintStatus::RESOLVED)->count();
+    $districts = $complaints
+        ->pluck('district')
+        ->map(fn (?string $district): string => trim((string) $district))
+        ->filter()
+        ->unique()
+        ->count();
+
+    $mapMarkers = $complaints->map(fn (Complaint $complaint): array => [
+        'coords' => [(float) $complaint->latitude, (float) $complaint->longitude],
+        'district' => trim((string) $complaint->district) ?: 'Bairro não informado',
+        'status' => $complaint->status?->label() ?? 'Pendente',
+        'color' => $complaint->high_priority ? '#ef4444' : match ($complaint->status) {
+            ComplaintStatus::RESOLVED => '#22c55e',
+            ComplaintStatus::UNDER_REVIEW, ComplaintStatus::IN_PROGRESS => '#0ea5e9',
+            default => '#f59e0b',
+        },
+    ])->values();
+
+    return view('home', [
+        'homeStats' => [
+            'total' => $total,
+            'resolvedPercent' => $total > 0 ? (int) round(($resolved / $total) * 100) : 0,
+            'districts' => $districts,
+        ],
+        'homeMapMarkers' => $mapMarkers,
+    ]);
+});
 
 Route::get('dashboard', function (\Illuminate\Http\Request $request, BackofficeController $backoffice) {
     return $request->user()->hasRole(\App\Enums\UserRole::AGENT)

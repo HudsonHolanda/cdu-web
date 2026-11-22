@@ -170,7 +170,23 @@
       background: var(--cdu-surface-muted);
       box-shadow: var(--cdu-shadow);
     }
-    body.cdu-home .map-img { display: block; width: 100%; height: auto; border-radius: 11px; }
+    body.cdu-home .home-map { display: block; width: 100%; height: 320px; border-radius: 11px; z-index: 0; }
+    body.cdu-home .map-card-link {
+      display: flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 12px;
+      border-radius: 9px;
+      background: var(--cdu-green);
+      color: #fff !important;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background .2s ease, transform .2s ease;
+    }
+    body.cdu-home .map-card-link:hover { background: var(--cdu-green-dark); transform: translateY(-1px); }
+    body.cdu-home .map-card-link svg { width: 17px; height: 17px; }
 
     body.cdu-home .stats {
       display: grid;
@@ -231,6 +247,7 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
+    body.cdu-home .testimonials-note { margin: 14px 0 0; color: var(--cdu-muted); font-size: 12px; text-align: center; }
     body.cdu-home .t-card {
       position: relative;
       padding: 25px;
@@ -366,23 +383,25 @@
         </div>
 
         <div class="map-card">
-          <img
-            src="{{ Vite::asset('resources/images/map-homepage.png') }}"
-            alt="Mapa de ocorrências" class="map-img">
+          <div id="home-complaints-map" class="home-map" role="img" aria-label="Mapa simplificado das denúncias cadastradas"></div>
+          <a href="{{ route('complaints.index') }}" class="map-card-link">
+            Visualizar denúncias
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
         </div>
       </div>
 
       <div class="stats">
         <div class="stat">
-          <div class="num">1393</div>
+          <div class="num">{{ number_format($homeStats['total'] ?? 0, 0, ',', '.') }}</div>
           <div class="label">Denúncias</div>
         </div>
         <div class="stat">
-          <div class="num">89%</div>
+          <div class="num">{{ $homeStats['resolvedPercent'] ?? 0 }}%</div>
           <div class="label">Resolvidas</div>
         </div>
         <div class="stat">
-          <div class="num">42</div>
+          <div class="num">{{ number_format($homeStats['districts'] ?? 0, 0, ',', '.') }}</div>
           <div class="label">Bairros</div>
         </div>
       </div>
@@ -483,6 +502,7 @@
           </div>
         </div>
       </div>
+      <p class="testimonials-note">Relatos fictícios, usados apenas para ilustrar a experiência na plataforma.</p>
 
       <hr class="divider">
 
@@ -517,6 +537,49 @@
   </div>
 
   <x-back-to-top />
+
+  <script>
+    (() => {
+      const mapElement = document.getElementById('home-complaints-map');
+      if (!mapElement) return;
+
+      const markers = @json($homeMapMarkers ?? []);
+      const initializeMap = () => {
+        if (!window.L) {
+          window.setTimeout(initializeMap, 100);
+          return;
+        }
+
+        const map = window.L.map(mapElement).setView([-23.5489, -46.6388], 11);
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(map);
+
+        const bounds = [];
+        markers.forEach((marker) => {
+          const point = marker.coords;
+          const circle = window.L.circleMarker(point, {
+            radius: 8,
+            color: marker.color,
+            fillColor: marker.color,
+            fillOpacity: 0.9,
+            weight: 2,
+          }).addTo(map);
+          const popup = document.createElement('div');
+          const status = document.createElement('strong');
+          status.textContent = marker.status;
+          popup.append(status, document.createElement('br'), document.createTextNode(marker.district));
+          circle.bindPopup(popup);
+          bounds.push(point);
+        });
+
+        if (bounds.length) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 });
+      };
+
+      initializeMap();
+    })();
+  </script>
 
 </body>
 
