@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceHttps(
+            $this->app->environment(['staging', 'production'])
+            && !$this->app->environment('testing')
+        );
+
         // Define gates para as user roles
         Gate::define('report-problems',    fn (User $u) => $u->hasRole(UserRole::CITIZEN));
         Gate::define('access-agent-panel', fn (User $u) => $u->isAgent());
