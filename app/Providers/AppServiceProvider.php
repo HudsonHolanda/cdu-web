@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 class AppServiceProvider extends ServiceProvider
 {
     /**
