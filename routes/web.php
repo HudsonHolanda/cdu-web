@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified', 'can:access-agent-panel'])->group(functio
     Route::get('painel/dashboard/pdf', [BackofficeController::class, 'agentDashboardPdf'])->name('agent.dashboard.pdf');
     Route::get('painel/mapa', [BackofficeController::class, 'agentMap'])->name('agent.mapa');
     Route::get('painel/relatorios', [BackofficeController::class, 'agentReports'])->name('agent.relatorios');
+    Route::get('painel/relatorios/tabela', [BackofficeController::class, 'agentReportsTable'])->name('agent.relatorios.table');
     Route::get('painel/relatorios/pdf', [BackofficeController::class, 'agentReportPdf'])->name('agent.relatorios.pdf');
 });
 
@@ -90,9 +91,21 @@ Route::view('profile', 'profile')
 
 Route::get('profile/image', function (\Illuminate\Http\Request $request) {
     $path = $request->user()?->profile_image;
-    abort_unless($path && Storage::disk('public')->exists($path), 404);
+    abort_unless($path, 404);
 
-    return Storage::disk('public')->response($path);
+    $profileDisk = config('filesystems.profile');
+    if (Storage::disk($profileDisk)->exists($path)) {
+        return Storage::disk($profileDisk)->response($path, null, [
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
+    }
+
+    // Backward compatibility for profile images saved before the disk became configurable.
+    abort_unless($profileDisk !== 'public' && Storage::disk('public')->exists($path), 404);
+
+    return Storage::disk('public')->response($path, null, [
+        'Cache-Control' => 'private, max-age=86400',
+    ]);
 })->middleware(['auth'])->name('profile.image');
 
 Route::get('denuncias/geocode', [ComplaintController::class, 'geocode'])

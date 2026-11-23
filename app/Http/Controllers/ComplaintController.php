@@ -518,18 +518,29 @@ class ComplaintController extends Controller
     public function image(string $filename): Response
     {
         abort_if($filename !== basename($filename) || $filename === '', 404);
-        $image = ComplaintImage::query()->where('path', 'like', '%/'.$filename)->first();
+        $image = null;
+
+        if (preg_match('/^image-(\d+)$/', $filename, $matches)) {
+            $image = ComplaintImage::query()->find((int) $matches[1]);
+        } else {
+            // Compatibility with legacy references that only contain the filename.
+            $image = ComplaintImage::query()->where('path', 'like', '%/'.$filename)->first();
+        }
 
         if ($image) {
             abort_unless(Storage::disk($image->disk)->exists($image->path), 404);
-            return Storage::disk($image->disk)->response($image->path);
+            return Storage::disk($image->disk)->response($image->path, null, [
+                'Cache-Control' => 'public, max-age=86400, immutable',
+            ]);
         }
 
         // Compatibilidade para imagens já referenciadas pelos dados JSON de demonstração.
         $legacyPath = resource_path('denuncias/'.$filename);
         abort_unless(is_file($legacyPath), 404);
 
-        return response()->file($legacyPath);
+        return response()->file($legacyPath, [
+            'Cache-Control' => 'public, max-age=86400, immutable',
+        ]);
     }
 
     public function geocode(Request $request)
@@ -590,11 +601,15 @@ class ComplaintController extends Controller
 
     private function toViewData(Complaint $complaint): array
     {
-        $paths = $complaint->images->pluck('path')->all();
-        if ($paths === [] && $complaint->image_url) {
-            $paths = [$complaint->image_url];
+        $images = $complaint->images;
+        $references = $images
+            ->map(fn (ComplaintImage $image): string => 'image-'.$image->getKey())
+            ->values()
+            ->all();
+
+        if ($references === [] && $complaint->image_url) {
+            $references = [basename($complaint->image_url)];
         }
-        $filenames = array_map(fn (string $path) => basename($path), $paths);
         $status = $complaint->status?->label() ?? 'Em aberto';
         $latestDeletionRequest = $complaint->relationLoaded('deletionRequests')
             ? $complaint->deletionRequests->sortByDesc('created_at')->first()
@@ -610,8 +625,8 @@ class ComplaintController extends Controller
             'title' => $complaint->title,
             'description' => $complaint->description,
             'userId' => $complaint->id_user,
-            'imageUrl' => $filenames[0] ?? '',
-            'attachments' => $filenames,
+            'imageUrl' => $references[0] ?? '',
+            'attachments' => $references,
             'status' => $status,
             'statusValue' => $complaint->status?->value ?? ComplaintStatus::PENDING->value,
             'highPriority' => (bool) $complaint->high_priority,

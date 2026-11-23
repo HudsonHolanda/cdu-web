@@ -15,6 +15,10 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    // Keep profile uploads on the same persistent disk as the other uploads
+    // unless a dedicated profile disk is explicitly configured.
+    'profile' => env('PROFILE_IMAGE_DISK', env('FILESYSTEM_DISK', 'public')),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
