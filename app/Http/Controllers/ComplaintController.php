@@ -255,7 +255,7 @@ class ComplaintController extends Controller
         });
 
         foreach ($paths as [$disk, $path]) {
-            Storage::disk($disk)->delete($path);
+            Storage::disk()->delete($path);
         }
 
         return redirect()->route('complaints.deletion-requests')->with('success', 'Solicitação analisada com sucesso.');
@@ -331,7 +331,7 @@ class ComplaintController extends Controller
             'cep.regex' => 'Informe um CEP válido, como 00000-000.',
         ]);
 
-        $disk = config('filesystems.default');
+        $disk = rtrim(env('FILESYSTEM_DISK', 'local'));
         $paths = [];
 
         try {
@@ -368,7 +368,7 @@ class ComplaintController extends Controller
             });
         } catch (\Throwable $exception) {
             foreach ($paths as $path) {
-                Storage::disk($disk)->delete($path);
+                Storage::disk()->delete($path);
             }
             report($exception);
 
@@ -459,7 +459,7 @@ class ComplaintController extends Controller
             });
         } catch (\Throwable $exception) {
             foreach ($paths as $path) {
-                Storage::disk($disk)->delete($path);
+                Storage::disk()->delete($path);
             }
             throw $exception;
         }
