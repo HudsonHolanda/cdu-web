@@ -55,7 +55,7 @@
                     <div class="complaint-attachment-grid">
                         @foreach ($attachments as $index => $filename)
                             <a class="complaint-attachment {{ $loop->first ? 'complaint-attachment--primary' : '' }}" href="{{ route('complaints.image', ['filename' => basename($filename)]) }}" target="_blank" rel="noopener">
-                                <img src="{{ route('complaints.image', ['filename' => basename($filename)]) }}" alt="{{ $index === 0 ? 'Foto principal' : 'Foto complementar '.$loop->iteration }} da denúncia: {{ $complaint['title'] }}" loading="lazy">
+                                <img src="{{ route('complaints.image', ['filename' => basename($filename)]) }}" alt="{{ $index === 0 ? 'Foto principal' : 'Foto complementar '.$loop->iteration }} da denúncia: {{ $complaint['title'] }}" loading="lazy" decoding="async">
                             </a>
                         @endforeach
                     </div>

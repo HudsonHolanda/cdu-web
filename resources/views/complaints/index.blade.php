@@ -54,7 +54,7 @@
                 @foreach ($complaints as $complaint)
                     <article class="complaint-card">
                         <a class="complaint-card-image" href="{{ route('complaints.show', ['publicId' => $complaint['publicId']]) }}" aria-label="Ver detalhes: {{ $complaint['title'] }}">
-                            <img src="{{ route('complaints.image', ['filename' => basename($complaint['imageUrl'])]) }}" alt="Imagem da denúncia: {{ $complaint['title'] }}" loading="lazy">
+                            <img src="{{ route('complaints.image', ['filename' => basename($complaint['imageUrl'])]) }}" alt="Imagem da denúncia: {{ $complaint['title'] }}" loading="lazy" decoding="async" width="640" height="360">
                             <span class="complaint-status complaint-status--{{ \Illuminate\Support\Str::slug($complaint['status']) }}">{{ $complaint['status'] }}</span>
                         </a>
                         <div class="complaint-card-content">

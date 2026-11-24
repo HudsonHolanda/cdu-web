@@ -164,17 +164,62 @@ class BackofficeController extends Controller
     public function agentReports(Request $request): View
     {
         $query = $this->reportQuery($request);
-        $complaints = $query->get();
 
         return view('agents.relatorios', [
-            'reportRows' => $this->reportRows($complaints),
             'reportSummary' => [
-                'total' => $complaints->count(),
-                'urgent' => $complaints->where('high_priority', true)->count(),
-                'resolved' => $complaints->where('status', ComplaintStatus::RESOLVED)->count(),
+                'total' => (clone $query)->count(),
+                'urgent' => (clone $query)->where('high_priority', true)->count(),
+                'resolved' => (clone $query)->where('status', ComplaintStatus::RESOLVED)->count(),
             ],
             'reportCategories' => Complaint::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
             'reportFilters' => $request->only(['start_date', 'end_date', 'status', 'category', 'priority']),
+        ]);
+    }
+
+    public function agentReportsTable(Request $request): JsonResponse
+    {
+        $query = $this->reportQuery($request);
+        $recordsTotal = (clone $query)->count();
+        $search = trim((string) $request->input('search.value', ''));
+
+        if ($search !== '') {
+            $query->where(function (Builder $builder) use ($search): void {
+                $builder
+                    ->where('title', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%")
+                    ->orWhere('district', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $recordsFiltered = (clone $query)->count();
+        $orderColumns = [
+            0 => 'complaint_id',
+            1 => 'title',
+            2 => 'category',
+            3 => 'district',
+            4 => 'status',
+            5 => 'high_priority',
+            7 => 'created_at',
+        ];
+        $orderColumn = $orderColumns[(int) $request->input('order.0.column', 7)] ?? 'created_at';
+        $orderDirection = strtolower((string) $request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $length = max(1, min((int) $request->input('length', 10), 100));
+        $start = max(0, (int) $request->input('start', 0));
+
+        $rows = $query
+            ->orderBy($orderColumn, $orderDirection)
+            ->skip($start)
+            ->take($length)
+            ->get()
+            ->map(fn (Complaint $complaint): array => $this->reportRows(collect([$complaint]))->first())
+            ->values();
+
+        return response()->json([
+            'draw' => (int) $request->input('draw', 0),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $rows,
         ]);
     }
 

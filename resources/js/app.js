@@ -357,12 +357,83 @@ const setupAgentDataTables = () => {
     });
 };
 
+const setupReportDataTable = () => {
+    const tableElement = document.querySelector('[data-report-datatable]');
+    if (!tableElement || tableElement.dataset.dataTableReady === 'true') return;
+
+    if (typeof window.DataTable === 'undefined') {
+        window.setTimeout(setupReportDataTable, 100);
+        return;
+    }
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
+    })[character]);
+    const statusClass = (status) => {
+        const normalized = String(status || '').toLowerCase();
+        if (normalized.includes('resolv') || normalized.includes('conclu')) return 'bg-emerald-100 text-emerald-700';
+        if (normalized.includes('anál') || normalized.includes('anali')) return 'bg-sky-100 text-sky-700';
+        if (normalized.includes('andamento')) return 'bg-blue-100 text-blue-700';
+        if (normalized.includes('pendent')) return 'bg-amber-100 text-amber-700';
+        return 'bg-rose-100 text-rose-700';
+    };
+
+    tableElement.dataset.dataTableReady = 'true';
+    new window.DataTable(tableElement, {
+        processing: true,
+        serverSide: true,
+        pageLength: 10,
+        lengthMenu: [[10, 20, 30, 50], [10, 20, 30, 50]],
+        searchDelay: 350,
+        order: [[7, 'desc']],
+        ajax: {
+            url: tableElement.dataset.datatableUrl,
+            data: (params) => {
+                params.start_date = tableElement.dataset.startDate || '';
+                params.end_date = tableElement.dataset.endDate || '';
+                params.status = tableElement.dataset.status || '';
+                params.category = tableElement.dataset.category || '';
+                params.priority = tableElement.dataset.priority || '';
+            },
+        },
+        language: {
+            search: 'Buscar:',
+            lengthMenu: 'Mostrar _MENU_ registros por página',
+            info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+            infoEmpty: 'Nenhum registro encontrado',
+            infoFiltered: '(filtrado de _MAX_ registros)',
+            zeroRecords: 'Nenhuma ocorrência encontrada com os filtros selecionados.',
+            emptyTable: 'Nenhuma ocorrência encontrada com os filtros selecionados.',
+            paginate: { first: 'Primeira', last: 'Última', next: 'Próxima', previous: 'Anterior' },
+        },
+        columns: [
+            { data: 'id', className: 'px-4 py-3 font-medium' },
+            { data: 'title', className: 'px-4 py-3' },
+            { data: 'category', className: 'px-4 py-3' },
+            { data: 'district', className: 'px-4 py-3' },
+            {
+                data: 'status',
+                className: 'px-4 py-3',
+                render: (value) => `<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(value)}">${escapeHtml(value)}</span>`,
+            },
+            {
+                data: 'priority',
+                className: 'px-4 py-3',
+                render: (value) => `<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">${escapeHtml(value)}</span>`,
+            },
+            { data: 'justification', className: 'px-4 py-3', render: (value) => escapeHtml(value || '—') },
+            { data: 'date', className: 'px-4 py-3' },
+        ],
+    });
+};
+
 setTheme(localStorage.getItem(themeKey) || 'light');
 setupBackToTop();
 setupBackofficeSidebar();
 setupOverviewFilters();
 setupDashboardTable();
 setupAgentDataTables();
+setupReportDataTable();
 document.addEventListener('livewire:navigated', () => {
     setTheme(localStorage.getItem(themeKey) || 'light');
     setupBackToTop();
@@ -370,6 +441,7 @@ document.addEventListener('livewire:navigated', () => {
     setupOverviewFilters();
     setupDashboardTable();
     setupAgentDataTables();
+    setupReportDataTable();
 });
 
 document.addEventListener('click', (event) => {

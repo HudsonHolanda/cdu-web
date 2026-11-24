@@ -46,10 +46,14 @@ new class extends Component
 
         if ($this->profileImage) {
             if ($user->profile_image) {
-                Storage::disk('public')->delete($user->profile_image);
+                Storage::disk(config('filesystems.profile'))->delete($user->profile_image);
+                // Remove files created by the previous hard-coded public disk.
+                if (config('filesystems.profile') !== 'public') {
+                    Storage::disk('public')->delete($user->profile_image);
+                }
             }
 
-            $user->profile_image = $this->profileImage->store('profile-images', 'public');
+            $user->profile_image = $this->profileImage->store('profile-images', config('filesystems.profile'));
         }
 
         $user->save();

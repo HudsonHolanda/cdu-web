@@ -92,20 +92,27 @@ html.dark .cdu-agent-page .bg-emerald-100 { background: #064e3b !important; colo
 html.dark .cdu-agent-page .bg-rose-100 { background: #5f1d2a !important; color: #fda4af !important; }
 
 .cdu-agent-page .dt-container { color: var(--cdu-text); font-size: .875rem; }
+.cdu-agent-reports .dt-container { color: var(--cdu-text); font-size: .875rem; }
 .cdu-agent-page .cdu-filter-card { transition: border-color .18s ease, box-shadow .18s ease; }
 .cdu-agent-page .cdu-filter-card.is-active { border-color: var(--cdu-green) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--cdu-green) 35%, transparent); }
 .cdu-agent-page .dt-container .dt-search input,
 .cdu-agent-page .dt-container .dt-length select { border: 1px solid var(--cdu-border) !important; border-radius: .6rem; background: var(--cdu-surface) !important; color: var(--cdu-text) !important; padding: .45rem .65rem; }
+.cdu-agent-reports .dt-container .dt-search input,
+.cdu-agent-reports .dt-container .dt-length select { border: 1px solid var(--cdu-border) !important; border-radius: .6rem; background: var(--cdu-surface) !important; color: var(--cdu-text) !important; padding: .45rem .65rem; }
 .cdu-agent-page .dt-container .dt-layout-row { margin: .8rem 0; }
 .cdu-agent-page .dt-container .dt-paging-button { border: 1px solid var(--cdu-border) !important; border-radius: .45rem !important; color: var(--cdu-text) !important; }
+.cdu-agent-reports .dt-container .dt-paging-button { border: 1px solid var(--cdu-border) !important; border-radius: .45rem !important; color: var(--cdu-text) !important; }
 .cdu-agent-page .dt-container .dt-paging-button.current,
 .cdu-agent-page .dt-container .dt-paging-button:hover { background: var(--cdu-green) !important; color: #fff !important; }
+.cdu-agent-reports .dt-container .dt-paging-button.current,
+.cdu-agent-reports .dt-container .dt-paging-button:hover { background: var(--cdu-green) !important; color: #fff !important; }
 html.dark .cdu-agent-page .dt-container .dt-info,
 html.dark .cdu-agent-page .dt-container label { color: var(--cdu-muted) !important; }
 html:not(.dark) .cdu-agent-page .bg-slate-900 { background: var(--cdu-sidebar) !important; color: #fff !important; }
 html:not(.dark) .cdu-agent-page .dt-container .dt-paging-button.current,
 html:not(.dark) .cdu-agent-page .dt-container .dt-paging-button:hover { border-color: var(--cdu-green) !important; background: var(--cdu-green) !important; color: #fff !important; }
 html:not(.dark) .cdu-agent-page .dt-container .dt-paging-button.disabled { background: var(--cdu-surface) !important; color: var(--cdu-muted) !important; opacity: .65; }
+html:not(.dark) .cdu-agent-reports .dt-container .dt-paging-button.disabled { background: var(--cdu-surface) !important; color: var(--cdu-muted) !important; opacity: .65; }
 
 @media (max-width: 767px) {
     .cdu-agent-page { overflow-x: hidden; }
@@ -119,6 +126,7 @@ html:not(.dark) .cdu-agent-page .dt-container .dt-paging-button.disabled { backg
     .cdu-agent-page .dt-container .dt-search input { width: min(100%, 20rem); }
     .cdu-agent-page .dt-container .dt-length select { min-width: 4.5rem; }
     .cdu-agent-page .dt-container .dt-paging { overflow-x: auto; padding-bottom: .2rem; white-space: nowrap; }
+    .cdu-agent-reports .dt-container .dt-paging { overflow-x: auto; padding-bottom: .2rem; white-space: nowrap; }
     .cdu-agent-page table th, .cdu-agent-page table td { white-space: nowrap; }
     .cdu-agent-page [data-agent-datatable] { min-width: 720px; }
     .cdu-agent-page .overflow-x-auto { max-width: 100%; }
